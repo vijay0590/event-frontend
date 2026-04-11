@@ -8,7 +8,7 @@ export const AuthProvider=({children})=>{
         const fetchUser=async()=>{
             try{
                 const res=await API.get("/users/me")
-                setUser(res.data)
+                setUser(res.data.user||res.data)
             }catch(error){
                 setUser(null)
             }
