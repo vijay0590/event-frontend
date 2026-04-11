@@ -1,0 +1,24 @@
+import{createContext,useEffect,useState} from "react";
+import API from "../api/axios";
+export const AuthContext=createContext();
+export const AuthProvider=({children})=>{
+    const[user,setUser]=useState(null)
+    //loads user on refresh
+    useEffect(()=>{
+        const fetchUser=async()=>{
+            try{
+                const res=await API.get("/users/me")
+                setUser(res.data)
+            }catch(error){
+                setUser(null)
+            }
+        }
+        fetchUser();
+    },[])
+    return (
+        <AuthContext.Provider value={{user,setUser}}>
+            {children}
+        </AuthContext.Provider>
+    )
+}
+export default AuthProvider
