@@ -15,7 +15,7 @@ const Navbar=()=>{
     return(
     <div className="bg-black text-white p-3 sm:p-4 flex justify-between items-center">
     <h1 className="font-bold">Event Management</h1>
-    <div className="flex gap-4">
+    <div className="flex gap-4 font-sm">
         <Link to="/">Home</Link>
         {/*not logged */}
     {!user && (
@@ -44,7 +44,7 @@ const Navbar=()=>{
           {/* user info */}
           {user&&(
          <>
-        <span className="text-sm">{user.name}</span>
+        <span className="text-md">{user.name}</span>
         <button onClick={handleLogout}
         className="bg-red-500 px-2 py-1 rounded"
         >logout</button>

@@ -8,6 +8,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import MyTickets from "./pages/MyTickets";
 import CreateEvent from "./pages/CreateEvent";
 import AdminDashboard from "./pages/AdminDashboard";
+import EventPages from "./pages/EventPages";
 
 
 const App = () => {
@@ -19,6 +20,7 @@ const App = () => {
          <Route path="/" element={<Home/>}></Route>
          <Route path="/login" element={<Login/>}></Route>
          <Route path="/register" element={<Register/>}></Route>
+         <Route path="/events/:id" element={<EventPages/>}/>
    {/*user*/}
          <Route path="/my-tickets" element={
           <ProtectedRoute role="user">

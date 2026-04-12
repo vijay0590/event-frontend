@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import API from "../api/axios";
+import { Link } from "react-router-dom";
 const Home = () => {
     const [events, setEvents] = useState([]);
     const[search,setSearch]=useState("")
@@ -39,7 +40,10 @@ const Home = () => {
                         <p className="text-sm text-gray-600">{e.location}</p>
                         <p className="text-sm"> ₹{e.ticketTypes?.[0]?.price}</p>
 
-                        <button className="bg-blue-500 text-white px-3 py-1 mt-2 rounded">view details</button>
+                        <Link
+                        to={`/events/${e._id}`}
+                        
+                        className="bg-blue-500 text-white px-3 py-1 mt-2 rounded">view details</Link>
                     </div>
 
                 ))}

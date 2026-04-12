@@ -2,6 +2,7 @@ import { useState,useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import API from "../api/axios";
 import { Navigate, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 const Register=()=>{
     const [form,setForm]=useState({name:"",email:"",password:""});
     const[error,setError]=useState("");
@@ -10,20 +11,25 @@ const Register=()=>{
    const handleChange=((e)=>{
     setForm({...form,[e.target.name]:e.target.value})
     });
-    const handleSubmit=async (e)=>{
+    const [loading,setLoading]=useState(false)
+    const handleSubmit=async(e)=>{
         e.preventDefault();
+        setLoading(true);
         try{
             const res=await API.post("/auth/register",form)
             //store token
             localStorage.setItem("token",res.data.token)
             //set user
             setUser(res.data.user);
+            toast.success("Registration successful")
             //redirect
             navigate("/");
 
 
         }catch(err){
-            setError(err.response?.data?.message)
+            toast.error(err.response?.data?.message||"Register failed")
+        }finally{
+            setLoading(false)
         }
 
     }
@@ -56,7 +62,9 @@ const Register=()=>{
            className="border p-2 w-full"
            onChange={handleChange}
            />
-           <button className="bg-blue-500 text-white w-full p-2 rounded">Register</button>
+           <button 
+           disabled={loading}
+           className="bg-blue-500 text-white w-full p-2 rounded">{loading?"Registering...":"Register"}</button>
 
             </form>
         </div>

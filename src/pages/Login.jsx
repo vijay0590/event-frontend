@@ -2,9 +2,12 @@ import { useState,useContext } from "react"
 import API from "../api/axios"
 import { AuthContext } from "../context/AuthContext"
 import { Navigate, useNavigate } from "react-router-dom"
+import toast from "react-hot-toast"
+
 const Login=()=>{
     const [form,setForm]=useState({email:"",password:""});
     const {setUser}=useContext(AuthContext);
+    const [loading,setLoading]=useState(false)
     const navigate=useNavigate();
     const handleChange=(e)=>{
         setForm({...form,[e.target.name]:e.target.value})
@@ -12,18 +15,23 @@ const Login=()=>{
     }
     const handleSubmit=async(e)=>{
         e.preventDefault();
+        setLoading(true);
         try{
             const res=await API.post("/auth/login",form)
             //store token
             localStorage.setItem("token",res.data.token)
             //setUser
             setUser(res.data.user)
+            toast.success("login successful")
             
             //redirect
            navigate("/");
 
            }catch(err){
-            console.log(err.response?.data);
+            toast.error(err.response?.data?.message||"login failed");
+
+        }finally{
+            setLoading(false);
         }
 
 
@@ -52,7 +60,11 @@ const Login=()=>{
                 onChange={handleChange}
                  />
                 
-                <button className="bg-blue-500 text-white p-2 w-full rounded">Login</button>
+                <button 
+              disabled={loading}
+                className="bg-blue-500 text-white p-2 w-full rounded">
+                    {loading?"logging in...":"Login"}
+                    </button>
             </form>
         </div>
     )
