@@ -32,8 +32,11 @@ const Navbar=()=>{
     )}
      {/* organiser*/}
      {role === "organiser" &&(
-          
+          <>
+          <Link to="/organiser-dashboard">Dashboard</Link>
         <Link to="/create-event">Create Event</Link>
+        <Link to="/my-events">My Events</Link>
+        </>
          )}
 
       {/* admin */}

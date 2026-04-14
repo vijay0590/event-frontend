@@ -9,6 +9,13 @@ import MyTickets from "./pages/MyTickets";
 import CreateEvent from "./pages/CreateEvent";
 import AdminDashboard from "./pages/AdminDashboard";
 import EventPages from "./pages/EventPages";
+import MyEvents from "./pages/MyEvents";
+import EditEvent from "./pages/EditEvent";
+import Attendees from "./pages/Attendees";
+import Organiser from "./pages/Organiser";
+import AdminEvents from "./pages/AdminEvents";
+
+
 
 
 const App = () => {
@@ -21,6 +28,7 @@ const App = () => {
          <Route path="/login" element={<Login/>}></Route>
          <Route path="/register" element={<Register/>}></Route>
          <Route path="/events/:id" element={<EventPages/>}/>
+         <Route path="/edit-event/:id" element={<EditEvent />} />
    {/*user*/}
          <Route path="/my-tickets" element={
           <ProtectedRoute role="user">
@@ -33,7 +41,22 @@ const App = () => {
           <CreateEvent/>
           </ProtectedRoute>
         }/>
-    
+    <Route path="/my-events" element={
+      <ProtectedRoute role="organiser">
+        <MyEvents/>
+      </ProtectedRoute>
+    }/>
+    <Route path="/attendees/:id" element={
+<ProtectedRoute role="organiser">
+  <Attendees/>
+</ProtectedRoute>
+ }/>
+ <Route path="/organiser-dashboard" element={
+ <ProtectedRoute>
+ <Organiser/>
+ </ProtectedRoute>
+ }
+ />
       {/*admin*/}
     
     <Route path="/admin" element={
@@ -41,6 +64,12 @@ const App = () => {
           <AdminDashboard/>
           </ProtectedRoute>
         }/>
+        <Route path="/admin-events" element={
+          <ProtectedRoute>
+            <AdminEvents/>
+          </ProtectedRoute>
+        }
+        />
 
   </Routes>
   </MainLayout>

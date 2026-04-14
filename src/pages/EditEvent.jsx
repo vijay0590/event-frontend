@@ -1,29 +1,48 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import API from "../api/axios";
 import toast from "react-hot-toast";
+import { useNavigate,useParams } from "react-router-dom";
 
-const CreateEvent = () => {
+const EditEvent = () => {
+    const {id}=useParams();
+    const navigate=useNavigate();
   const [form, setForm] = useState({
     title: "",
     description: "",
     location: "",
     date: "",
     time: "",
-    category: "",
-
-
-
-
-  });
+    category: ""
+    });
   const [ticketTypes, setTicketTypes] = useState([
     { type: "", price: "" }
   ])
 
-  const [image, setImage] = useState(null)
-  const addTicketType = () => {
-    setTicketTypes([...ticketTypes, {type: "", price: "" }])
-  }
+  const [image, setImage] = useState(null);
+  useEffect(()=>{
+    const fetchEvent=async()=>{
+        try{
+            const res=await API.get(`/events/${id}`)
+            const e=res.data.event
+            setForm({
+                title: e.title,
+          description: e.description,
+          location: e.location,
+          date: e.date?.split("T")[0],
+          time: e.time,
+          category: e.category,
+            })
+            setTicketTypes(e.ticketTypes||[])
+            
+        }catch(error){
+            toast.error("failed to load event")
+        }
 
+    }
+fetchEvent();
+},[id])
+
+ 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -33,6 +52,9 @@ const CreateEvent = () => {
     updated[index][field] = value;
     setTicketTypes(updated);
   };
+ const addTicketType = () => {
+    setTicketTypes([...ticketTypes, {type: "", price: "" }])
+  }
 
   const removeTicket = (index) => {
     const updated = ticketTypes.filter((_, i) => i !== index);
@@ -56,32 +78,22 @@ const CreateEvent = () => {
       if (image) {
         data.append("image", image)
       }
-      await API.post("/events", data, {
+      await API.put(`/events"/{id}`, data, {
         headers: {
           "content-type": "multipart/form-data"
         }
       })
-      toast.success("Event created succesfully!")
-      setForm({
-        title: "",
-        location: "",
-        date: "",
-        description: "",
-        time: "",
-        category: "",
-       
-      });
-      setTicketTypes([{ type: "", price: "" }]);
-      setImage(null);
+      toast.success("Event updated succesfully!")
+    navigate("/my-events");
 
     } catch (error) {
-      toast.error(error.response?.data?.message || "Event creation failed");
+      toast.error(error.response?.data?.message || "Event update failed");
     }
 
   }
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-lg font-bold">Create Event</h1>
+      <h1 className="text-lg font-bold">Edit Event</h1>
       <form onSubmit={handleSubmit}
         className="space-y-3">
         <input
@@ -101,7 +113,7 @@ const CreateEvent = () => {
           required
         />
         <input
-          type="date"
+        type="date"
           name="date"
           placeholder="date"
           value={form.date}
@@ -173,10 +185,10 @@ const CreateEvent = () => {
         />
         <button
           className="bg-green-500 text-white w-full p-2 rounded hover:bg-green-600"
-        >Create Event</button>
+        >Update Event</button>
       </form>
     </div>
   )
 }
 
-export default CreateEvent;
+export default EditEvent;
