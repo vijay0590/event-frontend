@@ -28,7 +28,7 @@ try{
     };
     const fetchEvents=async(id)=>{
         try{
-            const res=await API.get("/events")
+            const res=await API.get("/events/pending")
             setEvents(res.data.events);
 
         }catch(err){

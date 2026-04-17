@@ -14,16 +14,26 @@ const EditEvent = () => {
     time: "",
     category: ""
     });
+     const [schedule, setSchedule] = useState([
+    { title: "", speaker: "", startTime: "", endTime: "" }
+  ]);
   const [ticketTypes, setTicketTypes] = useState([
     { type: "", price: "" }
   ])
 
   const [image, setImage] = useState(null);
+
   useEffect(()=>{
     const fetchEvent=async()=>{
         try{
             const res=await API.get(`/events/${id}`)
-            const e=res.data.event
+               
+  const e = res?.data?.event || res?.data;
+  if (!e) {
+  toast.error("Event not found");
+  return;
+}
+       
             setForm({
                 title: e.title,
           description: e.description,
@@ -32,8 +42,8 @@ const EditEvent = () => {
           time: e.time,
           category: e.category,
             })
-            setTicketTypes(e.ticketTypes||[])
-            
+         setSchedule(Array.isArray(e.schedule) ? e.schedule : []);
+         setTicketTypes(Array.isArray(e.ticketTypes) ? e.ticketTypes : []);
         }catch(error){
             toast.error("failed to load event")
         }
@@ -60,6 +70,23 @@ fetchEvent();
     const updated = ticketTypes.filter((_, i) => i !== index);
     setTicketTypes(updated);
   };
+   const handleScheduleChange = (i, field, value) => {
+    const updated = [...schedule];
+    updated[i][field] = value;
+    setSchedule(updated);
+  };
+
+  const addSchedule = () => {
+    setSchedule([
+      ...schedule,
+      { title: "", speaker: "", startTime: "", endTime: "" }
+    ]);
+  };
+
+  const removeSchedule = (i) => {
+    setSchedule(schedule.filter((_, index) => index !== i));
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,8 +95,9 @@ fetchEvent();
       Object.keys(form).forEach((key) => {
         data.append(key, form[key])
       });
-
-      data.append(
+  data.append("schedule", JSON.stringify(schedule));
+     
+  data.append(
         "ticketTypes",
         JSON.stringify(
           ticketTypes
@@ -78,7 +106,7 @@ fetchEvent();
       if (image) {
         data.append("image", image)
       }
-      await API.put(`/events"/{id}`, data, {
+      await API.put(`/events/${id}`, data, {
         headers: {
           "content-type": "multipart/form-data"
         }
@@ -145,10 +173,52 @@ fetchEvent();
           className="w-full border p-2 rounded"
           required
         />
+        
+        <h1 className="text-xl font-bold">Schedule</h1>
+        
+          {(schedule ?? []).map((s, i) => (
+            <div key={i}
+            className="border p-2 rounded space-y-1"
+            >
+           <input placeholder="title"
+                  value={s.title}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"title",e.target.value)}
+           />
+             <input placeholder="speaker"
+                  value={s.speaker}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"speaker",e.target.value)}
+           />
+             <input placeholder="StartTime"
+                  value={s.startTime}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"startTime",e.target.value)}
+           />
+             <input placeholder="EndTime"
+                  value={s.endTime}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"endTime",e.target.value)}
+           />
+           <button type="button"
+                   className="text-red-500"
+                   onClick={()=>removeSchedule(i)}  
+           >
+            remove
+           </button>
+
+            </div>
+          ))
+
+        }
+        <button type="button"
+         className="bg-gray-300 px-2 py-1 rounded"
+                onClick={addSchedule}
+        >+ Add schedule</button>
         <h1 className="text-xl font-bold">Ticket Types</h1>
         <div>
           {
-            ticketTypes.map((t, i) => (
+            Array.isArray(ticketTypes) &&ticketTypes.map((t, i) => (
               <div key={i}
                 className="flex items-center gap-2"
               >
@@ -182,6 +252,7 @@ fetchEvent();
           type="file"
           accept="image/*"
           onChange={(e) => setImage(e.target.files[0])}
+          
         />
         <button
           className="bg-green-500 text-white w-full p-2 rounded hover:bg-green-600"

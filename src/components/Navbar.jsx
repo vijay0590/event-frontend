@@ -22,12 +22,15 @@ const Navbar=()=>{
         <>
         <Link to="/login">Login</Link>
         <Link to="/register">Register</Link>
+       
+        
         </>
     )}
       {/* user */}
     {role === "user" &&(
         <>
         <Link to="/my-tickets">My Tickets</Link>
+         <Link to="/profile">Profile</Link>
         </>
     )}
      {/* organiser*/}

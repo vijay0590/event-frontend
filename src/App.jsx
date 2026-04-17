@@ -8,12 +8,17 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import MyTickets from "./pages/MyTickets";
 import CreateEvent from "./pages/CreateEvent";
 import AdminDashboard from "./pages/AdminDashboard";
-import EventPages from "./pages/EventPages";
+
 import MyEvents from "./pages/MyEvents";
 import EditEvent from "./pages/EditEvent";
 import Attendees from "./pages/Attendees";
 import Organiser from "./pages/Organiser";
 import AdminEvents from "./pages/AdminEvents";
+import AdminUsers from "./pages/AdminUsers";
+import Profile from "./pages/Profile";
+import EventDetails from "./pages/EventDetails";
+
+
 
 
 
@@ -27,7 +32,8 @@ const App = () => {
          <Route path="/" element={<Home/>}></Route>
          <Route path="/login" element={<Login/>}></Route>
          <Route path="/register" element={<Register/>}></Route>
-         <Route path="/events/:id" element={<EventPages/>}/>
+        
+         <Route path="/event/:id" element={<EventDetails />} />
          <Route path="/edit-event/:id" element={<EditEvent />} />
    {/*user*/}
          <Route path="/my-tickets" element={
@@ -35,6 +41,14 @@ const App = () => {
           <MyTickets/>
           </ProtectedRoute>
         }/>
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile/>
+          </ProtectedRoute>
+        }
+        
+        />
+
      {/*organiser*/}
     <Route path="/create-event" element={
           <ProtectedRoute role="organiser">
@@ -67,6 +81,12 @@ const App = () => {
         <Route path="/admin-events" element={
           <ProtectedRoute>
             <AdminEvents/>
+          </ProtectedRoute>
+        }
+        />
+        <Route path="/admin-users" element={
+          <ProtectedRoute>
+            <AdminUsers/>
           </ProtectedRoute>
         }
         />

@@ -38,7 +38,9 @@ link.click()
   return (
     <div>
       <h1 className="text-xl font-bold">Attendees</h1>
-       {
+       {attendees.length===0?(
+        <p className="text-gray-400">no attendees yet</p>
+       ):(
        attendees.map((a) => (
         <div key={a._id} className="border p-2 mt-2 rounded">
           <p>{a.name}</p>
@@ -47,7 +49,7 @@ link.click()
  
         </div>
       ))
-    
+       )
     }
        <button onClick={handleExport}
     className="bg-green-500 text-white px-3 py-1 mt-3 rounded"

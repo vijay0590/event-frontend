@@ -38,7 +38,10 @@ const MyEvents =() => {
   return (
     <div>
       <h1 className="text-xl font-bold">My Events</h1>
-      {events.map((e)=>(
+      {events.length===0?(
+        <p className="text-gray-500">no events created</p>
+      ):(
+      events.map((e)=>(
         <div key={e._id}
         className="border p-3 mt-r rounded">
         <p className="font-bold">{e.title}</p>
@@ -58,7 +61,7 @@ const MyEvents =() => {
         </div>
         
 
-      ))}
+      )))}
      
     </div>
   )

@@ -10,14 +10,18 @@ const CreateEvent = () => {
     date: "",
     time: "",
     category: "",
+});
+const[schedule,setSchedule]=useState([
+{
+  title:"",speaker:"",startTime:"",endTime:""
+}
 
+]);
 
-
-
-  });
   const [ticketTypes, setTicketTypes] = useState([
     { type: "", price: "" }
   ])
+  const[loading,setLoading]=useState(false);
 
   const [image, setImage] = useState(null)
   const addTicketType = () => {
@@ -38,9 +42,26 @@ const CreateEvent = () => {
     const updated = ticketTypes.filter((_, i) => i !== index);
     setTicketTypes(updated);
   };
+  const handleScheduleChange=(index,field,value)=>{
+           const updated=[...schedule]
+           updated[index][field]=value
+           setSchedule(updated)
+  }
+  const addSchedule=()=>{
+    setSchedule([
+      ...schedule,
+      {title:"",speaker:"",startTime:"",endTime:""}
+    ])
+
+  };
+  const removeSchedule=(index)=>{
+    const updated=schedule.filter((_,i)=>i!==index)
+    setSchedule(updated)
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const data = new FormData();
       Object.keys(form).forEach((key) => {
@@ -52,7 +73,9 @@ const CreateEvent = () => {
         JSON.stringify(
           ticketTypes
         )
+        
       );
+      data.append("schedule",JSON.stringify(schedule));
       if (image) {
         data.append("image", image)
       }
@@ -71,8 +94,11 @@ const CreateEvent = () => {
         category: "",
        
       });
+         setSchedule([{ title: "", speaker: "", startTime: "", endTime: "" }]);
       setTicketTypes([{ type: "", price: "" }]);
+
       setImage(null);
+      setLoading(false)
 
     } catch (error) {
       toast.error(error.response?.data?.message || "Event creation failed");
@@ -133,6 +159,47 @@ const CreateEvent = () => {
           className="w-full border p-2 rounded"
           required
         />
+        <h1 className="text-xl font-bold">Schedule</h1>
+        {
+          schedule.map((s,i)=>(
+            <div key={i}
+            className="border p-2 rounded space-y-1"
+            >
+           <input placeholder="title"
+                  value={s.title}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"title",e.target.value)}
+           />
+             <input placeholder="speaker"
+                  value={s.speaker}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"speaker",e.target.value)}
+           />
+             <input placeholder="StartTime"
+                  value={s.startTime}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"startTime",e.target.value)}
+           />
+             <input placeholder="EndTime"
+                  value={s.endTime}
+                  className="border p-1 w-full"
+                  onChange={(e)=>handleScheduleChange(i,"endTime",e.target.value)}
+           />
+           <button type="button"
+                   className="text-red-500"
+                   onClick={()=>removeSchedule(i)}  
+           >
+            remove
+           </button>
+
+            </div>
+          ))
+
+        }
+        <button type="button"
+         className="bg-gray-300 px-2 py-1 rounded"
+                onClick={addSchedule}
+        >+ Add schedule</button>
         <h1 className="text-xl font-bold">Ticket Types</h1>
         <div>
           {
@@ -172,8 +239,9 @@ const CreateEvent = () => {
           onChange={(e) => setImage(e.target.files[0])}
         />
         <button
+           disabled={loading}
           className="bg-green-500 text-white w-full p-2 rounded hover:bg-green-600"
-        >Create Event</button>
+        >{loading?"Creating Event":"Create Event"}</button>
       </form>
     </div>
   )
