@@ -7,7 +7,7 @@ const MyTickets=()=>{
   const [emails,setEmails]=useState({})
   const fetchTickets=async()=>{
     try{
-      const res=await API.get("/tickets/my")
+      const res=await API.get("/api/tickets/my")
       setTickets(res.data.tickets)
 
     }catch(err){
@@ -17,7 +17,7 @@ const MyTickets=()=>{
   }
   const handleCancel=async(id)=>{
     try{
-      await API.delete(`/tickets/${id}`);
+      await API.delete(`/api/tickets/${id}`);
       toast.success("Tickets cancelled");
       fetchTickets() ;//refresh
     }catch(err){
@@ -28,7 +28,7 @@ const MyTickets=()=>{
 };
 const handleTransfer=async(id)=>{
   try{
-    await API.put(`/tickets/transfer/${id}`,{
+    await API.put(`/api/tickets/transfer/${id}`,{
       newUserEmail:emails[id],
 
     })

@@ -77,7 +77,7 @@ try {
     data.append("image", image);
   }
 
-  await API.post("/events", data, {
+  await API.post("/api/events", data, {
     headers: {
       "content-type": "multipart/form-data",
     },

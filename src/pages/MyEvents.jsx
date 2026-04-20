@@ -11,7 +11,7 @@ const MyEvents =() => {
     const navigate=useNavigate();
     const handleDelete=async(id)=>{
         try{
-            await API.delete(`/events/${id}`);
+            await API.delete(`/api/events/${id}`);
             toast.success("Event deleted succesfully")
            fetchEvents();
         }catch(error){
@@ -24,7 +24,7 @@ const MyEvents =() => {
  const fetchEvents=async()=>{
      try{
 
-   const res= await API.get("/events/me/")
+   const res= await API.get("/api/events/me/")
    setEvents(res.data.events)
 }catch(error){
     toast.error(error.response?.data?.message)

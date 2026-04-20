@@ -15,7 +15,7 @@ const Profile = () => {
 };
 const handleUpdate = async () => {
   try {
-    const res = await API.put("/users/me", form);
+    const res = await API.put("/api/users/me", form);
 
     setUser(res.data); // update context
     toast.success("Profile updated");

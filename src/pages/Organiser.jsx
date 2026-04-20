@@ -8,7 +8,7 @@ const Organiser = () => {
         revenue:0
     })
     useEffect(()=>{
-    API.get("/analytics/overall")
+    API.get("/api/analytics/overall")
     .then((res)=>{
         setStats({
             events:res.data.totalEvents,

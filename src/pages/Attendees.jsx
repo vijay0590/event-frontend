@@ -21,7 +21,7 @@ link.click()
   useEffect(() => {
   const fetchAttendees = async () => {
     try {
-      const res = await API.get(`/events/${id}/attendees`);
+      const res = await API.get(`/api/events/${id}/attendees`);
       
       const data = res.data.attendees;
       setAttendees(Array.isArray(data) ? data : [])

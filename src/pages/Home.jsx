@@ -10,7 +10,7 @@ const Home = () => {
     const[loading,setLoading]=useState(true);
 
 useEffect(() => {
-    API.get("/events")
+    API.get("/api/events")
         .then((res) => {
             setEvents(res.data.events);
             setLoading(false);
@@ -99,7 +99,7 @@ useEffect(() => {
                    filteredEvents.map((e) => (
                         <div key={e._id}
             className="bg-white rounded-xl shadow hover:shadow-2xl transition duration-300 overflow-hidden p-3">
-                            <img src={`http://localhost:3001${e.images?.[0]}`}
+                           <img src={e.images?.[0]}
                                 alt="event image"
                                 className="h-48 w-full object-cover"
                             />

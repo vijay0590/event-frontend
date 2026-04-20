@@ -26,7 +26,7 @@ const EditEvent = () => {
   useEffect(()=>{
     const fetchEvent=async()=>{
         try{
-            const res=await API.get(`/events/${id}`)
+            const res=await API.get(`/api/events/${id}`)
                
   const e = res?.data?.event || res?.data;
   if (!e) {
@@ -106,7 +106,7 @@ fetchEvent();
       if (image) {
         data.append("image", image)
       }
-      await API.put(`/events/${id}`, data, {
+      await API.put(`/api/events/${id}`, data, {
         headers: {
           "content-type": "multipart/form-data"
         }

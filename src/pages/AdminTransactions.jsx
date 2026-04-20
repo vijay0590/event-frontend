@@ -6,7 +6,7 @@ const AdminTransactions = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    API.get("/admin/transactions")
+    API.get("/api/admin/transactions")
       .then((res) => setTransactions(res.data))
       .catch((err) => console.log(err));
   }, []);

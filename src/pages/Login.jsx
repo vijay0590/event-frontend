@@ -17,7 +17,7 @@ const Login=()=>{
         e.preventDefault();
         setLoading(true);
         try{
-            const res=await API.post("/auth/login",form)
+            const res=await API.post("api/auth/login",form)
             //store token
             localStorage.setItem("token",res.data.token)
             //setUser

@@ -13,7 +13,7 @@ const EventDetails = () => {
 
   // Fetch event
   useEffect(() => {
-    API.get(`/events/${id}`)
+    API.get(`/api/events/${id}`)
       .then((res) => setEvent(res.data.event || res.data))
       .catch((err) => console.log(err));
   }, [id]);
@@ -33,7 +33,7 @@ const EventDetails = () => {
 
     try {
       // 🔹 STEP 1: CREATE TICKET (PENDING)
-      const ticketRes = await API.post("/tickets", {
+      const ticketRes = await API.post("/api/tickets", {
         eventId: event._id,
         quantity,
         ticketType: selectedType,
@@ -43,7 +43,7 @@ const EventDetails = () => {
       const ticketId = ticketRes.data.ticket._id;
 
       // 🔹 STEP 2: CREATE ORDER
-      const { data: order } = await API.post("/payment/create-order", {
+      const { data: order } = await API.post("/api/payment/create-order", {
         amount: totalAmount || 1,
       });
 
@@ -58,7 +58,7 @@ const EventDetails = () => {
         handler: async function (response) {
           try {
             // 🔹 VERIFY PAYMENT
-            const verify = await API.post("/payment/verify", {
+            const verify = await API.post("/api/payment/verify", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -68,7 +68,7 @@ const EventDetails = () => {
               toast.success("Payment successful ✅");
 
               // 🔹 CONFIRM PAYMENT + SEND EMAIL
-              await API.post("/tickets/pay", {
+              await API.post("/api/tickets/pay", {
                 ticketId,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,

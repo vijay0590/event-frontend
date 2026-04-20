@@ -9,7 +9,7 @@ const AdminUsers = () => {
     const handleDelete=async(id)=>{
           if (!window.confirm("Are you sure to delete this user?")) return;
         try{
-            await API.delete(`/admin/users/${id}`)
+            await API.delete(`/api/admin/users/${id}`)
             toast.success("user deleted succesfully")
             fetchUsers();
         }catch(error){
@@ -19,7 +19,7 @@ toast.error("delete failed")
     }
     const fetchUsers=async()=>{
         try{
-            const res=await API.get("/admin/users")
+            const res=await API.get("/api/admin/users")
             setUsers(res.data.users);
 
         }catch(err){
@@ -31,7 +31,7 @@ toast.error("delete failed")
     },[]);
     const handleRole=async(id,role)=>{
       try{
-        await API.put(`/users/role/${id}`,{role})
+        await API.put(`/api/users/role/${id}`,{role})
         toast.success("role updated")
         fetchUsers();
       }catch(error){

@@ -16,7 +16,7 @@ const Register=()=>{
         e.preventDefault();
         setLoading(true);
         try{
-            const res=await API.post("/auth/register",form)
+            const res=await API.post("/api/auth/register",form)
             //store token
             localStorage.setItem("token",res.data.token)
             //set user

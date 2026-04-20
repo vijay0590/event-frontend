@@ -17,7 +17,7 @@ const AdminDashboard =() => {
   const latestTransactions = transactions.slice(0, 5);
 
   useEffect(()=>{
-    API.get("/admin")
+    API.get("/api/admin")
     .then ((res)=>setStats({
         users: res.data.users,
   events: res.data.events,
@@ -25,7 +25,7 @@ const AdminDashboard =() => {
     }))
     .catch((err)=>console.log(err))
     //transactions
-      API.get("/admin/transactions")
+      API.get("/api/admin/transactions")
     .then((res) => {
       setTransactions(res.data);
       setLoading(false);
