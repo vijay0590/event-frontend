@@ -5,7 +5,7 @@ A full-stack event booking application with User, Organizer, and Admin roles.
 ---
 
 ## 🌐 Live Demo
-https://your-deployed-link.com
+
 
 ---
 
@@ -16,7 +16,7 @@ Email: vijay@gmail.com
 Password: 123456
 
 ### 🎤 Organizer
-Email: baskar06@Qgmail.com  
+Email: baskar06@gmail.com  
 Password: 123456 
 
 ### 👤 User
