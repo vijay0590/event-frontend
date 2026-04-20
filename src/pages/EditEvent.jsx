@@ -120,8 +120,8 @@ fetchEvent();
 
   }
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h1 className="text-lg font-bold">Edit Event</h1>
+   <div className="max-w-2xl mx-auto px-4 py-4">
+<h1 className="text-xl md:text-2xl font-bold">Edit Event</h1>
       <form onSubmit={handleSubmit}
         className="space-y-3">
         <input
@@ -178,7 +178,7 @@ fetchEvent();
         
           {(schedule ?? []).map((s, i) => (
             <div key={i}
-            className="border p-2 rounded space-y-1"
+            className="border p-3 rounded space-y-2"
             >
            <input placeholder="title"
                   value={s.title}
@@ -220,7 +220,7 @@ fetchEvent();
           {
             Array.isArray(ticketTypes) &&ticketTypes.map((t, i) => (
               <div key={i}
-                className="flex items-center gap-2"
+             className="flex flex-col md:flex-row gap-2"
               >
                 <input
                   placeholder="Type(VIP/GENERAL)"
@@ -231,7 +231,7 @@ fetchEvent();
                 <input
                   type="number"
                   placeholder="price"
-                  className="border p-2 rounded w-28"
+                  className="border p-2 rounded w-full md:w-28"
                   value={t.price}
                   onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))}
                 />
@@ -245,11 +245,13 @@ fetchEvent();
           }
           <button
             type="button"
+            className="mt-2 bg-gray-300 px-2 py-1 rounded"
             onClick={addTicketType}>+Add Ticket Type</button>
         </div>
 
         <input
           type="file"
+          className="w-full border p-2 rounded"
           accept="image/*"
           onChange={(e) => setImage(e.target.files[0])}
           

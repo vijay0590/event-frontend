@@ -8,15 +8,16 @@ const Organiser = () => {
         revenue:0
     })
     useEffect(()=>{
-        API.get("/analytics/overall")
-        .then((res)=>setStats({
+    API.get("/analytics/overall")
+    .then((res)=>{
+        setStats({
             events:res.data.totalEvents,
             tickets:res.data.totalTickets,
             revenue:res.data.totalRevenue
-
-        }))
-        .catch((err)=>console.log(err))
-    },[])
+        })
+    })
+    .catch((err)=>console.log(err))
+},[])
   return (
     <div className="p-5">
       <h1 className="text-2xl font-bold mb-4 ">Dashboard</h1>

@@ -1,7 +1,7 @@
 import { useState,useContext } from "react"
 import API from "../api/axios"
 import { AuthContext } from "../context/AuthContext"
-import { Navigate, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
 
 const Login=()=>{
@@ -22,6 +22,7 @@ const Login=()=>{
             localStorage.setItem("token",res.data.token)
             //setUser
             setUser(res.data.user)
+            
             toast.success("login successful")
             
             //redirect
@@ -39,7 +40,7 @@ const Login=()=>{
 
 
     return(
-        <div className="flex justify-center items-center h-[80vh">
+        <div className="flex justify-center items-center h-[80vh]">
             <form 
             className="border p-5 w-80 space-y-3 rounded"
             onSubmit={handleSubmit}>

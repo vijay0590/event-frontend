@@ -25,7 +25,6 @@ link.click()
       
       const data = res.data.attendees;
       setAttendees(Array.isArray(data) ? data : [])
-      console.log(res.data)
 
     } catch (err) {
       console.log(err);

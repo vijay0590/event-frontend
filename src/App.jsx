@@ -1,6 +1,6 @@
 import{ BrowserRouter,Routes,Route} from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
-import Test from "./pages/Test"
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -17,6 +17,7 @@ import AdminEvents from "./pages/AdminEvents";
 import AdminUsers from "./pages/AdminUsers";
 import Profile from "./pages/Profile";
 import EventDetails from "./pages/EventDetails";
+import AdminTransactions from "./pages/AdminTransactions";
 
 
 
@@ -34,7 +35,10 @@ const App = () => {
          <Route path="/register" element={<Register/>}></Route>
         
          <Route path="/event/:id" element={<EventDetails />} />
-         <Route path="/edit-event/:id" element={<EditEvent />} />
+     
+
+
+
    {/*user*/}
          <Route path="/my-tickets" element={
           <ProtectedRoute role="user">
@@ -55,6 +59,14 @@ const App = () => {
           <CreateEvent/>
           </ProtectedRoute>
         }/>
+        <Route
+  path="/edit-event/:id"
+  element={
+    <ProtectedRoute role="organiser">
+      <EditEvent />
+    </ProtectedRoute>
+  }
+/>
     <Route path="/my-events" element={
       <ProtectedRoute role="organiser">
         <MyEvents/>
@@ -66,7 +78,7 @@ const App = () => {
 </ProtectedRoute>
  }/>
  <Route path="/organiser-dashboard" element={
- <ProtectedRoute>
+ <ProtectedRoute role="organiser">
  <Organiser/>
  </ProtectedRoute>
  }
@@ -79,17 +91,26 @@ const App = () => {
           </ProtectedRoute>
         }/>
         <Route path="/admin-events" element={
-          <ProtectedRoute>
+          <ProtectedRoute role="admin">
             <AdminEvents/>
           </ProtectedRoute>
         }
         />
         <Route path="/admin-users" element={
-          <ProtectedRoute>
+          <ProtectedRoute role="admin">
             <AdminUsers/>
           </ProtectedRoute>
         }
         />
+        <Route
+  path="/admin-transactions"
+  element={
+    <ProtectedRoute role="admin">
+      <AdminTransactions />
+    </ProtectedRoute>
+  }
+/>
+       
 
   </Routes>
   </MainLayout>

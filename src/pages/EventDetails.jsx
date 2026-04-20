@@ -104,16 +104,16 @@ const EventDetails = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+<div className="max-w-3xl mx-auto px-4 py-4">
 
       {/* IMAGE */}
       <img
         src={`http://localhost:3001${event.images?.[0]}`}
-        className="w-full h-60 object-cover rounded"
+   className="w-full h-48 md:h-60 object-cover rounded-xl"
       />
 
       {/* BASIC INFO */}
-      <h1 className="text-2xl font-bold mt-3">{event.title}</h1>
+     <h1 className="text-xl md:text-2xl font-bold mt-3">{event.title}</h1>
       <p className="text-gray-600">{event.location}</p>
       <p className="mt-2">{event.description}</p>
 
@@ -136,7 +136,7 @@ const EventDetails = () => {
       {/* TICKETS */}
       <h2 className="mt-4 font-bold">Tickets</h2>
       {event.ticketTypes?.map((t, i) => (
-        <div key={i} className="border p-2 mt-2 rounded flex justify-between">
+        <div key={i} className="border p-3 mt-2 rounded flex flex-col md:flex-row md:justify-between gap-2">
           <div>
             <p>{t.type}</p>
             <p>₹{t.price}</p>
@@ -163,7 +163,7 @@ const EventDetails = () => {
           min="1"
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="border p-1 w-20"
+    className="border p-2 w-full md:w-32 rounded"
         />
       </div>
 
@@ -175,7 +175,7 @@ const EventDetails = () => {
       {/* PAYMENT BUTTON */}
       <button
         onClick={handlePayment}
-        className="bg-green-600 text-white px-4 py-2 mt-4 rounded w-full"
+       className="bg-green-600 text-white px-4 py-3 mt-4 rounded w-full text-lg"
       >
         Book & Pay
       </button>
