@@ -108,7 +108,7 @@ const EventDetails = () => {
 
       {/* IMAGE */}
       <img
-        src={`http://localhost:3001${event.images?.[0]}`}
+        src={`${import.meta.env.VITE_API_URL}${event.images?.[0]}`}
    className="w-full h-48 md:h-60 object-cover rounded-xl"
       />
 

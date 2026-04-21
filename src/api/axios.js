@@ -1,6 +1,6 @@
 import axios from "axios";
 const API =axios.create({
-    baseURL:"https://online-6fl3.onrender.com"
+    baseURL:import.meta.env.VITE_API_URL
 });
 //attach token automatically
 API.interceptors.request.use((req)=>{
