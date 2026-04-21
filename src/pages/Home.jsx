@@ -68,7 +68,7 @@ useEffect(() => {
             </select>
             <input
                 type="date"
-                value={date}
+                value={date || ""}
                 className="w-full md:w-auto border border-gray-300 p-2 rounded focus:ring-2 focus:ring-indigo-500"
                 onChange={(e) => setDate(e.target.value)}
             />

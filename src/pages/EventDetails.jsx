@@ -10,6 +10,7 @@ const EventDetails = () => {
   const [event, setEvent] = useState(null);
   const [selectedType, setSelectedType] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [loading,setLoading]=useState(false);
 
   // Fetch event
   useEffect(() => {
@@ -36,7 +37,7 @@ const EventDetails = () => {
       return;
     }
     if (!selectedType) return toast.error("Select ticket type");
-
+       setLoading(true);
     try {
       // 🔹 STEP 1: CREATE TICKET (PENDING)
       const ticketRes = await API.post(
@@ -115,12 +116,15 @@ const EventDetails = () => {
               );
 
               toast.success("Ticket booked 🎟️");
+              setLoading(false);
               navigate("/my-tickets");
             } else {
               toast.error("Verification failed");
+              setLoading(false);
             }
           } catch (err) {
             toast.error("Verification error");
+            setLoading(false);
           }
         },
 
@@ -135,11 +139,12 @@ const EventDetails = () => {
       };
       if (!window.Razorpay) {
         alert("Payment service not loaded. Refresh page.");
+        setLoading(false);
         return;
       }
       const rzp = new window.Razorpay(options);
       rzp.open();
-
+      setLoading(false);
     } catch (error) {
       console.log(error);
       toast.error("Payment failed ❌");
@@ -215,12 +220,15 @@ const EventDetails = () => {
       </p>
 
       {/* PAYMENT BUTTON */}
-      <button
-        onClick={handlePayment}
-        className="bg-green-600 text-white px-4 py-3 mt-4 rounded w-full text-lg"
-      >
-        Book & Pay
-      </button>
+     <button
+  onClick={handlePayment}
+  disabled={loading}
+  className={`px-4 py-3 mt-4 rounded w-full text-lg ${
+    loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+  } text-white`}
+>
+  {loading ? "Processing..." : "Book & Pay"}
+</button>
     </div>
   );
 };
