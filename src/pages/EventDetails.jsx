@@ -29,23 +29,44 @@ const EventDetails = () => {
 
   // FINAL PAYMENT FLOW
   const handlePayment = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login to book tickets");
+      return;
+    }
     if (!selectedType) return toast.error("Select ticket type");
 
     try {
       // 🔹 STEP 1: CREATE TICKET (PENDING)
-      const ticketRes = await API.post("/api/tickets", {
-        eventId: event._id,
-        quantity,
-        ticketType: selectedType,
-        paymentMethod: "razorpay",
-      });
-
+      const ticketRes = await API.post(
+        "/api/tickets",
+        {
+          eventId: event._id,
+          quantity,
+          ticketType: selectedType,
+          paymentMethod: "razorpay",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const ticketId = ticketRes.data.ticket._id;
 
       // 🔹 STEP 2: CREATE ORDER
-      const { data: order } = await API.post("/api/payment/create-order", {
-        amount: totalAmount || 1,
-      });
+      const { data: order } = await API.post(
+        "/api/payment/create-order",
+        {
+          amount: totalAmount || 1,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -54,26 +75,44 @@ const EventDetails = () => {
         name: event.title,
         description: "Event Ticket",
         order_id: order.id,
-          image: `${import.meta.env.VITE_API_URL}${event.images?.[0]}`,
-
+        image: `${import.meta.env.VITE_API_URL}${event.images?.[0]}`,
+        //verify payment
         handler: async function (response) {
           try {
-            // 🔹 VERIFY PAYMENT
-            const verify = await API.post("/api/payment/verify", {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
+            const token = localStorage.getItem("token");
+
+            const verify = await API.post(
+              "/api/payment/verify",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
             if (verify.data.message === "Payment verified") {
               toast.success("Payment successful ✅");
 
               // 🔹 CONFIRM PAYMENT + SEND EMAIL
-              await API.post("/api/tickets/pay", {
-                ticketId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-              });
+
+              await API.post(
+                "/api/tickets/pay",
+                {
+                  ticketId,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
 
               toast.success("Ticket booked 🎟️");
               navigate("/my-tickets");
@@ -94,7 +133,10 @@ const EventDetails = () => {
           color: "#3399cc",
         },
       };
-
+      if (!window.Razorpay) {
+        alert("Payment service not loaded. Refresh page.");
+        return;
+      }
       const rzp = new window.Razorpay(options);
       rzp.open();
 
@@ -105,16 +147,16 @@ const EventDetails = () => {
   };
 
   return (
-<div className="max-w-3xl mx-auto px-4 py-4">
+    <div className="max-w-3xl mx-auto px-4 py-4">
 
       {/* IMAGE */}
       <img
         src={`${import.meta.env.VITE_API_URL}${event.images?.[0]}`}
-   className="w-full h-48 md:h-60 object-cover rounded-xl"
+        className="w-full h-48 md:h-60 object-cover rounded-xl"
       />
 
       {/* BASIC INFO */}
-     <h1 className="text-xl md:text-2xl font-bold mt-3">{event.title}</h1>
+      <h1 className="text-xl md:text-2xl font-bold mt-3">{event.title}</h1>
       <p className="text-gray-600">{event.location}</p>
       <p className="mt-2">{event.description}</p>
 
@@ -145,11 +187,10 @@ const EventDetails = () => {
 
           <button
             onClick={() => setSelectedType(t.type)}
-            className={`px-2 py-1 rounded ${
-              selectedType === t.type
-                ? "bg-green-500 text-white"
-                : "bg-gray-200"
-            }`}
+            className={`px-2 py-1 rounded ${selectedType === t.type
+              ? "bg-green-500 text-white"
+              : "bg-gray-200"
+              }`}
           >
             Select
           </button>
@@ -164,7 +205,7 @@ const EventDetails = () => {
           min="1"
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-    className="border p-2 w-full md:w-32 rounded"
+          className="border p-2 w-full md:w-32 rounded"
         />
       </div>
 
@@ -176,7 +217,7 @@ const EventDetails = () => {
       {/* PAYMENT BUTTON */}
       <button
         onClick={handlePayment}
-       className="bg-green-600 text-white px-4 py-3 mt-4 rounded w-full text-lg"
+        className="bg-green-600 text-white px-4 py-3 mt-4 rounded w-full text-lg"
       >
         Book & Pay
       </button>
