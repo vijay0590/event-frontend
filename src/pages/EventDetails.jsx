@@ -54,6 +54,7 @@ const EventDetails = () => {
         name: event.title,
         description: "Event Ticket",
         order_id: order.id,
+          image: `${import.meta.env.VITE_API_URL}${event.images?.[0]}`,
 
         handler: async function (response) {
           try {
