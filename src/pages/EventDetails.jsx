@@ -153,7 +153,7 @@ const EventDetails = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-4">
-
+  <div className="bg-white shadow-lg rounded-xl p-4 md:p-6">
       {/* IMAGE */}
       <img
         src={`${import.meta.env.VITE_API_URL}${event.images?.[0]}`}
@@ -166,7 +166,7 @@ const EventDetails = () => {
       <p className="mt-2">{event.description}</p>
 
       {/* SCHEDULE */}
-      <h2 className="mt-4 font-bold">Schedule</h2>
+      <h2 className="mt-4 font-semibold text-lg">Schedule</h2>
       {event.schedule?.length > 0 ? (
         event.schedule.map((s, i) => (
           <div key={i} className="border p-2 mt-2 rounded">
@@ -182,7 +182,7 @@ const EventDetails = () => {
       )}
 
       {/* TICKETS */}
-      <h2 className="mt-4 font-bold">Tickets</h2>
+      <h2 className="mt-4 font-semibold text-lg">Tickets</h2>
       {event.ticketTypes?.map((t, i) => (
         <div key={i} className="border p-3 mt-2 rounded flex flex-col md:flex-row md:justify-between gap-2">
           <div>
@@ -229,6 +229,7 @@ const EventDetails = () => {
 >
   {loading ? "Processing..." : "Book & Pay"}
 </button>
+    </div>
     </div>
   );
 };
