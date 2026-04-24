@@ -35,26 +35,68 @@ link.click()
   fetchAttendees();
 }, [id]);
   return (
-    <div>
-      <h1 className="text-xl font-bold">Attendees</h1>
-       {attendees.length===0?(
-        <p className="text-gray-400">no attendees yet</p>
-       ):(
-       attendees.map((a) => (
-        <div key={a._id} className="border p-2 mt-2 rounded">
-          <p>{a.name}</p>
-            <p className="text-sm text-gray-600">{a.email}</p>
-    <p className="text-sm text-green-600">Tickets: {a.tickets}</p>
- 
-        </div>
-      ))
-       )
-    }
-       <button onClick={handleExport}
-    className="bg-green-500 text-white px-3 py-1 mt-3 rounded"
-    >Export csv</button>
+  <div className="max-w-5xl mx-auto px-4 py-10">
+
+    <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+      Attendees
+    </h1>
+
+    {attendees.length === 0 ? (
+      <p className="text-center text-gray-500 mt-10">
+        No attendees yet
+      </p>
+    ) : (
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+
+        <table className="w-full text-sm">
+
+          <thead className="text-left text-gray-500 border-b bg-gray-50">
+            <tr>
+              <th className="p-3">Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Tickets</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {attendees.map((a) => (
+              <tr key={a._id} className="border-b hover:bg-gray-50">
+
+                <td className="p-3 font-medium text-gray-900">
+                  {a.name}
+                </td>
+
+                <td className="p-3 text-gray-500">
+                  {a.email}
+                </td>
+
+                <td className="p-3">
+                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-600">
+                    {a.tickets}
+                  </span>
+                </td>
+
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+
+      </div>
+    )}
+
+    {/* EXPORT BUTTON */}
+    <div className="mt-4 text-right">
+      <button
+        onClick={handleExport}
+        className="text-sm px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+      >
+        Export CSV
+      </button>
     </div>
-  )
+
+  </div>
+);
 }
 
 export default Attendees

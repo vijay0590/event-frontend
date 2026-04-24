@@ -10,7 +10,7 @@ const EventDetails = () => {
   const [event, setEvent] = useState(null);
   const [selectedType, setSelectedType] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [loading,setLoading]=useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Fetch event
   useEffect(() => {
@@ -37,7 +37,7 @@ const EventDetails = () => {
       return;
     }
     if (!selectedType) return toast.error("Select ticket type");
-       setLoading(true);
+    setLoading(true);
     try {
       // 🔹 STEP 1: CREATE TICKET (PENDING)
       const ticketRes = await API.post(
@@ -76,7 +76,7 @@ const EventDetails = () => {
         name: event.title,
         description: "Event Ticket",
         order_id: order.id,
-        image: `${import.meta.env.VITE_API_URL}${event.images?.[0]}`,
+        
         //verify payment
         handler: async function (response) {
           try {
@@ -150,86 +150,133 @@ const EventDetails = () => {
       toast.error("Payment failed ❌");
     }
   };
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-4">
-  <div className="bg-white shadow-lg rounded-xl p-4 md:p-6">
-      {/* IMAGE */}
-      <img
-        src={`${import.meta.env.VITE_API_URL}${event.images?.[0]}`}
-        className="w-full h-48 md:h-60 object-cover rounded-xl"
-      />
+    <div className="max-w-5xl mx-auto px-4 py-10">
 
-      {/* BASIC INFO */}
-      <h1 className="text-xl md:text-2xl font-bold mt-3">{event.title}</h1>
-      <p className="text-gray-600">{event.location}</p>
-      <p className="mt-2">{event.description}</p>
+      <div className="grid md:grid-cols-2 gap-8">
 
-      {/* SCHEDULE */}
-      <h2 className="mt-4 font-semibold text-lg">Schedule</h2>
-      {event.schedule?.length > 0 ? (
-        event.schedule.map((s, i) => (
-          <div key={i} className="border p-2 mt-2 rounded">
-            <p className="font-semibold">{s.title}</p>
-            <p className="text-sm text-gray-600">
-              {s.startTime} - {s.endTime}
+        {/* LEFT SIDE */}
+        <div>
+
+          {/* IMAGE */}
+          <img
+            src={`${import.meta.env.VITE_API_URL}${event.images?.[0]}`}
+            className="w-full h-64 object-cover rounded-2xl"
+          />
+
+          {/* INFO */}
+          <h1 className="text-2xl font-semibold text-gray-900 mt-4">
+            {event.title}
+          </h1>
+
+          <p className="text-gray-500 mt-1">
+            📍 {event.location}
+          </p>
+
+          <p className="text-gray-600 mt-3">
+            {event.description}
+          </p>
+
+          {/* SCHEDULE */}
+          <h2 className="mt-6 text-lg font-semibold text-gray-900">
+            Schedule
+          </h2>
+
+          {event.schedule?.length > 0 ? (
+            <div className="space-y-2 mt-2">
+              {event.schedule.map((s, i) => (
+                <div
+                  key={i}
+                  className="bg-gray-50 border border-gray-100 rounded-lg p-3"
+                >
+                  <p className="font-medium text-gray-900">
+                    {s.title}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {s.startTime} - {s.endTime}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {s.speaker}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 mt-2">No schedule available</p>
+          )}
+
+        </div>
+
+        {/* RIGHT SIDE (BOOKING PANEL) */}
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 h-fit">
+
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Book Tickets
+          </h2>
+
+          {/* TICKETS */}
+          <div className="space-y-2">
+            {event.ticketTypes?.map((t, i) => (
+              <div
+                key={i}
+                onClick={() => setSelectedType(t.type)}
+                className={`p-3 border rounded-lg cursor-pointer flex justify-between ${selectedType === t.type
+                    ? "border-indigo-600 bg-indigo-50"
+                    : "border-gray-200"
+                  }`}
+              >
+                <p className="font-medium">{t.type}</p>
+                <p className="text-gray-600">₹{t.price}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* QUANTITY */}
+          <div className="mt-4">
+            <p className="text-sm text-gray-500 mb-1">
+              Quantity
             </p>
-            <p className="text-xs text-gray-500">{s.speaker}</p>
-          </div>
-        ))
-      ) : (
-        <p>No schedule available</p>
-      )}
 
-      {/* TICKETS */}
-      <h2 className="mt-4 font-semibold text-lg">Tickets</h2>
-      {event.ticketTypes?.map((t, i) => (
-        <div key={i} className="border p-3 mt-2 rounded flex flex-col md:flex-row md:justify-between gap-2">
-          <div>
-            <p>{t.type}</p>
-            <p>₹{t.price}</p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                className="px-3 py-1 bg-gray-100 rounded"
+              >
+                -
+              </button>
+
+              <span className="px-4">{quantity}</span>
+
+              <button
+                onClick={() => setQuantity((q) => q + 1)}
+                className="px-3 py-1 bg-gray-100 rounded"
+              >
+                +
+              </button>
+            </div>
           </div>
 
+          {/* TOTAL */}
+          <p className="mt-4 font-semibold text-gray-900">
+            Total: ₹{totalAmount || 0}
+          </p>
+
+          {/* CTA */}
           <button
-            onClick={() => setSelectedType(t.type)}
-            className={`px-2 py-1 rounded ${selectedType === t.type
-              ? "bg-green-500 text-white"
-              : "bg-gray-200"
+            onClick={handlePayment}
+            disabled={loading}
+            className={`w-full mt-4 py-3 rounded-lg text-white ${loading
+                ? "bg-gray-400"
+                : "bg-indigo-600 hover:bg-indigo-700"
               }`}
           >
-            Select
+            {loading ? "Processing..." : "Book & Pay"}
           </button>
-        </div>
-      ))}
 
-      {/* QUANTITY */}
-      <div className="mt-4">
-        <p>Quantity</p>
-        <input
-          type="number"
-          min="1"
-          value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-          className="border p-2 w-full md:w-32 rounded"
-        />
+        </div>
+
       </div>
 
-      {/* TOTAL */}
-      <p className="mt-3 font-bold">
-        Total: ₹{totalAmount || 0}
-      </p>
-
-      {/* PAYMENT BUTTON */}
-     <button
-  onClick={handlePayment}
-  disabled={loading}
-  className={`px-4 py-3 mt-4 rounded w-full text-lg ${
-    loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
-  } text-white`}
->
-  {loading ? "Processing..." : "Book & Pay"}
-</button>
-    </div>
     </div>
   );
 };

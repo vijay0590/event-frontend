@@ -38,36 +38,50 @@ const Login=()=>{
 
     }
 
+return (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 
-    return(
-        <div className="flex justify-center items-center h-[80vh]">
-            <form 
-            className="border p-5 w-80 space-y-3 rounded"
-            onSubmit={handleSubmit}>
-                <h2 className="text-xl font-bold mb-2">Login</h2>
-                <input
-                type="email"
-                name="email"
-                placeholder="email"
-                className="border p-2 w-full"
-                onChange={handleChange}
-                 />
-                
-                <input
-                type="password"
-                name="password"
-                placeholder="password"
-                className="border p-2 w-full"
-                onChange={handleChange}
-                 />
-                
-                <button 
-              disabled={loading}
-                className="bg-blue-500 text-white p-2 w-full rounded">
-                    {loading?"logging in...":"Login"}
-                    </button>
-            </form>
-        </div>
-    )
+    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 w-full max-w-sm">
+
+      {/* LOGO / TITLE */}
+      <h2 className="text-2xl font-semibold text-gray-900 text-center mb-1">
+        Welcome Back
+      </h2>
+
+      <p className="text-sm text-gray-500 text-center mb-6">
+        Login to your account
+      </p>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          onChange={handleChange}
+          className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+        />
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          onChange={handleChange}
+          className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+        />
+
+        <button
+          disabled={loading}
+          className="bg-indigo-600 text-white py-2 w-full rounded-lg hover:bg-indigo-700 transition"
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+);
 }
 export default Login

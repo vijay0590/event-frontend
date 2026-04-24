@@ -5,7 +5,7 @@ const MainLayout=({children})=>{
     return(
     <>
     <Navbar/>
-    <div className="p-5">{children}</div>
+    <div className="p-5 bg-gray-50 min-h-screen">{children}</div>
     </>
     )
 }

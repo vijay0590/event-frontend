@@ -16,60 +16,83 @@ const AdminTransactions = () => {
   );
 
   return (
-    <div className="p-5">
-      <h1 className="text-2xl font-bold mb-4">All Transactions</h1>
+    <div className="max-w-6xl mx-auto px-4 py-10">
 
-      {/* SEARCH */}
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+        All Transactions
+      </h1>
+
+      {/* 🔍 SEARCH */}
       <input
         type="text"
-        placeholder="Search user..."
-        className="border p-2 mb-4 w-full md:w-1/3"
+        placeholder="Search by user..."
         onChange={(e) => setSearch(e.target.value)}
+        className="border border-gray-200 px-4 py-2 rounded-lg w-full md:w-1/3 mb-5 focus:ring-2 focus:ring-indigo-500 outline-none"
       />
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border bg-white">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-2 border">User</th>
-              <th className="p-2 border">Event</th>
-              <th className="p-2 border">Amount</th>
-              <th className="p-2 border">Status</th>
-              <th className="p-2 border">Payment ID</th>
-              <th className="p-2 border">Date</th>
-            </tr>
-          </thead>
+      {/* TABLE */}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
 
-          <tbody>
-            {filtered.map((t) => (
-              <tr key={t._id}>
-                <td className="p-2 border">{t.user?.name}</td>
-                <td className="p-2 border">{t.event?.title}</td>
-                <td className="p-2 border">₹{t.totalPrice}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
 
-                <td className="p-2 border">
-                  <span
-                    className={`px-2 py-1 text-white rounded ${
-                      t.paymentStatus === "COMPLETED"
-                        ? "bg-green-500"
-                        : t.paymentStatus === "FAILED"
-                        ? "bg-red-500"
-                        : "bg-yellow-500"
-                    }`}
-                  >
-                    {t.paymentStatus}
-                  </span>
-                </td>
-
-                <td className="p-2 border">{t.paymentId}</td>
-                <td className="p-2 border">
-                  {new Date(t.createdAt).toLocaleDateString()}
-                </td>
+            <thead className="text-left text-gray-500 border-b bg-gray-50">
+              <tr>
+                <th className="p-3">User</th>
+                <th className="p-3">Event</th>
+                <th className="p-3">Amount</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Payment ID</th>
+                <th className="p-3">Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filtered.map((t) => (
+                <tr key={t._id} className="border-b hover:bg-gray-50">
+
+                  <td className="p-3 font-medium text-gray-900">
+                    {t.user?.name || "Unknown"}
+                  </td>
+
+                  <td className="p-3 text-gray-600">
+                    {t.event?.title || "-"}
+                  </td>
+
+                  <td className="p-3 text-gray-900">
+                    ₹{t.totalPrice}
+                  </td>
+
+                  <td className="p-3">
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${t.paymentStatus === "COMPLETED"
+                        ? "bg-green-100 text-green-600"
+                        : t.paymentStatus === "FAILED"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-yellow-100 text-yellow-600"
+                        }`}
+                    >
+                      {t.paymentStatus}
+                    </span>
+                  </td>
+
+                  <td className="p-3 text-gray-500">
+                    {t.paymentId}
+                  </td>
+
+                  <td className="p-3 text-gray-500">
+                    {new Date(t.createdAt).toLocaleDateString()}
+                  </td>
+
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+        </div>
+
       </div>
+
     </div>
   );
 };

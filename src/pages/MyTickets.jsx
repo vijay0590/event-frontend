@@ -44,48 +44,88 @@ const handleTransfer=async(id)=>{
   useEffect(()=>{
     fetchTickets()
   },[])
+return (
+  <div className="max-w-5xl mx-auto px-4 py-10">
 
-return(
-  <div>
-    <h1 className="text-xl font-bold">My Tickets</h1>
-    {tickets.length==0?(
-      <p>No tickets found</p>
-    ):(
-      tickets
-      .filter((t) => t.paymentStatus !== "cancelled")
-      .map((t)=>(
-        <div 
-        className="border p-2 mb-2 rounded"
-        key={t._id}>
-          <p><b>event:</b>{t.event?.title}</p>
-          <p><b>quantity:</b>{t.quantity}</p>
-          <p><b>status:</b>{t.paymentStatus}</p>
-           <input
-      type="email"
-      placeholder="Enter email to transfer"
-      value={emails[t._id] || ""}
-      onChange={(e) =>
-        setEmails({ ...emails, [t._id]: e.target.value })
-      }
-      className="border px-2 py-1 mt-2 w-full"
-    />
-          <div className="flex gap-2 mt-2">
-            <button
-            onClick={()=>handleCancel(t._id)}
-             className="bg-red-500 text-white px-2 py-1 rounded">cancel
-             </button>
-            <button 
-            onClick={()=>handleTransfer(t._id)}
-            className="bg-yellow-500 text-white px-2 py-1 rounded">Transfer
-            </button>
-          </div>
-        </div>
-      ))
-    )
+    <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+      My Tickets
+    </h1>
 
-}
+    {tickets.length === 0 ? (
+      <div className="text-center text-gray-500 mt-20">
+        🎟️ No tickets booked yet
+      </div>
+    ) : (
+      <div className="space-y-5">
+
+        {tickets
+          .filter((t) => t.paymentStatus !== "cancelled")
+          .map((t) => (
+            <div
+              key={t._id}
+              className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 hover:shadow-md transition"
+            >
+
+              {/* HEADER */}
+              <div className="flex justify-between items-start">
+
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {t.event?.title}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Quantity: {t.quantity}
+                  </p>
+                </div>
+
+                <span className={`text-xs px-3 py-1 rounded-full ${
+                  t.paymentStatus === "paid"
+                    ? "bg-green-100 text-green-600"
+                    : "bg-yellow-100 text-yellow-600"
+                }`}>
+                  {t.paymentStatus}
+                </span>
+
+              </div>
+
+              {/* TRANSFER INPUT */}
+              <input
+                type="email"
+                placeholder="Transfer ticket to email"
+                value={emails[t._id] || ""}
+                onChange={(e) =>
+                  setEmails({ ...emails, [t._id]: e.target.value })
+                }
+                className="mt-4 border border-gray-200 px-3 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+
+              {/* ACTIONS */}
+             <div className="flex gap-3 mt-4">
+
+  <button
+    onClick={() => handleCancel(t._id)}
+    className="text-sm px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+  >
+    Cancel
+  </button>
+
+  <button
+    onClick={() => handleTransfer(t._id)}
+    className="text-sm px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+  >
+    Transfer
+  </button>
+
+</div>
+
+            </div>
+          ))}
+
+      </div>
+    )}
+
   </div>
-)
+);
 };
 
  

@@ -19,25 +19,56 @@ const Organiser = () => {
     .catch((err)=>console.log(err))
 },[])
   return (
-    <div className="p-5">
-      <h1 className="text-2xl font-bold mb-4 ">Dashboard</h1>
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-blue-500 text-white p-5 rounded">
-            <h2>Total Events</h2>
-            <p className="text-xl">{stats.events}</p>
-        </div>
-        <div className="bg-green-500 text-white p-5 rounded">
-            <h2>Total Tickets</h2>
-            <p className="text-xl">{stats.tickets}</p>
-        </div>
-        <div className="bg-purple-500 text-white p-5 rounded">
-            <h2>Total Revenue</h2>
-            <p className="text-xl">{stats.revenue}</p>
-        </div>
+  <div className="max-w-6xl mx-auto px-4 py-10">
+
+    <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+      Dashboard
+    </h1>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+
+      {/* EVENTS */}
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+
+        <p className="text-sm text-gray-500 mb-1">
+          Total Events
+        </p>
+
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {stats.events}
+        </h2>
 
       </div>
+
+      {/* TICKETS */}
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+
+        <p className="text-sm text-gray-500 mb-1">
+          Total Tickets
+        </p>
+
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {stats.tickets}
+        </h2>
+
+      </div>
+
+      {/* REVENUE */}
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+
+        <p className="text-sm text-gray-500 mb-1">
+          Total Revenue
+        </p>
+
+        <h2 className="text-2xl font-semibold text-indigo-600">
+          ₹{stats.revenue}
+        </h2>
+
+      </div>
+
     </div>
-  )
-}
+
+  </div>
+);}
 
 export default Organiser

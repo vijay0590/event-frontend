@@ -34,37 +34,79 @@ const MyEvents =() => {
         fetchEvents();
     },[])
     
+return (
+  <div className="max-w-5xl mx-auto px-4 py-10">
 
-  return (
-    <div>
-      <h1 className="text-xl font-bold">My Events</h1>
-      {events.length===0?(
-        <p className="text-gray-500">no events created</p>
-      ):(
-      events.map((e)=>(
-        <div key={e._id}
-        className="border p-3 mt-r rounded">
-        <p className="font-bold">{e.title}</p>
-        <p>{e.location}</p>
-        <p>{e.date}</p>
-        <Link to={`/attendees/${e._id}`}
-        className="bg-blue-500 text-white px-2 py-1 mt-2 rounded"
-        >
-        View Attendees
-        </Link>
-        <button className="bg-blue-500 text-white px-2 py-1 mt-2 rounded"
-                onClick={()=>navigate(`/edit-event/${e._id}`)}
-        >Edit Event</button>
-         <button onClick={()=>{handleDelete(e._id)}}
-      className="bg-red-500 text-white px-2 py-1 mt-2 rounded"
-      >Delete</button>
-        </div>
-        
+    <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+      My Events
+    </h1>
 
-      )))}
-     
-    </div>
-  )
+    {events.length === 0 ? (
+      <div className="text-center text-gray-500 mt-20">
+        📅 No events created yet
+      </div>
+    ) : (
+      <div className="space-y-5">
+
+        {events.map((e) => (
+          <div
+            key={e._id}
+            className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 hover:shadow-md transition"
+          >
+
+            {/* HEADER */}
+            <div className="flex justify-between items-start">
+
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {e.title}
+                </h2>
+
+                <p className="text-sm text-gray-500">
+                  📍 {e.location}
+                </p>
+
+                <p className="text-xs text-gray-400">
+                  📅 {new Date(e.date).toDateString()}
+                </p>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="flex gap-2 flex-wrap">
+
+                <Link
+                  to={`/attendees/${e._id}`}
+                  className="text-sm px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200"
+                >
+                  Attendees
+                </Link>
+
+                <button
+                  onClick={() => navigate(`/edit-event/${e._id}`)}
+                  className="text-sm px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(e._id)}
+                  className="text-sm px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        ))}
+
+      </div>
+    )}
+
+  </div>
+);
 }
 
 export default MyEvents;

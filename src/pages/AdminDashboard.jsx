@@ -40,103 +40,152 @@ const AdminDashboard = () => {
 
 
   return (
-    <div className="p-5">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-blue-500 text-white p-5 rounded">
-          <h2>Total Events</h2>
-          <p className="text-xl">{stats.events}</p>
-        </div>
-        <div className="bg-green-500 text-white p-5 rounded">
-          <h2>Total Users</h2>
-          <p className="text-xl">{stats.users}</p>
-        </div>
-        <div className="bg-purple-500 text-white p-5 rounded">
-          <h2>Total Revenue</h2>
-          <p className="text-xl font-bold">₹{stats.revenue}</p>
-        </div>
-      </div >
+  <div className="max-w-6xl mx-auto px-4 py-10">
 
+    <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+      Admin Dashboard
+    </h1>
 
-      <div className="mt-6">
-        <BarChart width={400} height={300} data={data}>
+    {/* 🔥 STATS */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <p className="text-sm text-gray-500">Total Events</p>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {stats.events}
+        </h2>
+      </div>
+
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <p className="text-sm text-gray-500">Total Users</p>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {stats.users}
+        </h2>
+      </div>
+
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <p className="text-sm text-gray-500">Total Revenue</p>
+        <h2 className="text-2xl font-semibold text-indigo-600">
+          ₹{stats.revenue}
+        </h2>
+      </div>
+
+    </div>
+
+    {/* 📊 CHART */}
+    <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm mt-8">
+
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        Overview
+      </h2>
+
+      <div className="w-full overflow-x-auto">
+        <BarChart width={500} height={300} data={data}>
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip />
           <Bar dataKey="value" />
         </BarChart>
+      </div>
 
-        <div className="flex flex-wrap gap-4 mt-5">
-          <Link
-            to="/admin-events"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-          >
-            Manage Events
-          </Link>
+    </div>
 
-          <Link
-            to="/admin-users"
-            className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition"
-          >
-            Users List
-          </Link>
+    {/* ⚡ ACTIONS */}
+    <div className="flex flex-wrap gap-3 mt-6">
 
-          <Link
-            to="/admin-transactions"
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg shadow hover:bg-purple-700 transition"
-          >
-            Transactions
-          </Link>
-        </div>
-        <h2 className="text-xl font-bold mb-3">Recent Transactions</h2>
+      <Link
+        to="/admin-events"
+        className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm"
+      >
+        Manage Events
+      </Link>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : latestTransactions.length === 0 ? (
-          <p>No transactions</p>
-        ) : (
-          <table className="w-full border">
-            <thead className="bg-gray-200">
+      <Link
+        to="/admin-users"
+        className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm"
+      >
+        Users
+      </Link>
+
+      <Link
+        to="/admin-transactions"
+        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
+      >
+        Transactions
+      </Link>
+
+    </div>
+
+    {/* 💳 TRANSACTIONS */}
+    <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm mt-8">
+
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        Recent Transactions
+      </h2>
+
+      {loading ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : latestTransactions.length === 0 ? (
+        <p className="text-gray-500">No transactions</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+
+            <thead className="text-left text-gray-500 border-b">
               <tr>
-                <th className="p-2 border">User</th>
-                <th className="p-2 border">Amount</th>
-                <th className="p-2 border">Status</th>
+                <th className="p-2">User</th>
+                <th className="p-2">Amount</th>
+                <th className="p-2">Status</th>
               </tr>
             </thead>
 
             <tbody>
               {latestTransactions.map((t) => (
-                <tr key={t._id}>
-                  <td className="p-2 border">{t.user?.name}</td>
-                  <td className="p-2 border">₹{t.totalPrice}</td>
-                  <td className="p-2 border">
+                <tr key={t._id} className="border-b hover:bg-gray-50">
+
+                  <td className="p-2">
+                    {t.user?.name || "Unknown"}
+                  </td>
+
+                  <td className="p-2">
+                    ₹{t.totalPrice}
+                  </td>
+
+                  <td className="p-2">
                     <span
-                      className={`px-2 py-1 rounded text-white ${t.paymentStatus === "COMPLETED"
-                          ? "bg-green-500"
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        t.paymentStatus === "COMPLETED"
+                          ? "bg-green-100 text-green-600"
                           : t.paymentStatus === "FAILED"
-                            ? "bg-red-500"
-                            : "bg-yellow-500"
-                        }`}
+                          ? "bg-red-100 text-red-600"
+                          : "bg-yellow-100 text-yellow-600"
+                      }`}
                     >
                       {t.paymentStatus}
                     </span>
                   </td>
+
                 </tr>
               ))}
             </tbody>
-          </table>
-        )}
 
-        {/* LINK */}
-        <div className="mt-3">
-          <Link to="/admin-transactions" className="text-blue-600 underline">
-            View All Transactions →
-          </Link>
+          </table>
         </div>
+      )}
+
+      <div className="mt-3">
+        <Link
+          to="/admin-transactions"
+          className="text-indigo-600 text-sm hover:underline"
+        >
+          View all →
+        </Link>
       </div>
+
     </div>
 
-  )
+  </div>
+);
 }
 
 export default AdminDashboard

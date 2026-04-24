@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
 import API from "../api/axios";
 import toast from "react-hot-toast";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const EditEvent = () => {
-    const {id}=useParams();
-    const navigate=useNavigate();
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -13,8 +13,8 @@ const EditEvent = () => {
     date: "",
     time: "",
     category: ""
-    });
-     const [schedule, setSchedule] = useState([
+  });
+  const [schedule, setSchedule] = useState([
     { title: "", speaker: "", startTime: "", endTime: "" }
   ]);
   const [ticketTypes, setTicketTypes] = useState([
@@ -23,36 +23,36 @@ const EditEvent = () => {
 
   const [image, setImage] = useState(null);
 
-  useEffect(()=>{
-    const fetchEvent=async()=>{
-        try{
-            const res=await API.get(`/api/events/${id}`)
-               
-  const e = res?.data?.event || res?.data;
-  if (!e) {
-  toast.error("Event not found");
-  return;
-}
-       
-            setForm({
-                title: e.title,
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        const res = await API.get(`/api/events/${id}`)
+
+        const e = res?.data?.event || res?.data;
+        if (!e) {
+          toast.error("Event not found");
+          return;
+        }
+
+        setForm({
+          title: e.title,
           description: e.description,
           location: e.location,
           date: e.date?.split("T")[0],
           time: e.time,
           category: e.category,
-            })
-         setSchedule(Array.isArray(e.schedule) ? e.schedule : []);
-         setTicketTypes(Array.isArray(e.ticketTypes) ? e.ticketTypes : []);
-        }catch(error){
-            toast.error("failed to load event")
-        }
+        })
+        setSchedule(Array.isArray(e.schedule) ? e.schedule : []);
+        setTicketTypes(Array.isArray(e.ticketTypes) ? e.ticketTypes : []);
+      } catch (error) {
+        toast.error("failed to load event")
+      }
 
     }
-fetchEvent();
-},[id])
+    fetchEvent();
+  }, [id])
 
- 
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -62,15 +62,15 @@ fetchEvent();
     updated[index][field] = value;
     setTicketTypes(updated);
   };
- const addTicketType = () => {
-    setTicketTypes([...ticketTypes, {type: "", price: "" }])
+  const addTicketType = () => {
+    setTicketTypes([...ticketTypes, { type: "", price: "" }])
   }
 
   const removeTicket = (index) => {
     const updated = ticketTypes.filter((_, i) => i !== index);
     setTicketTypes(updated);
   };
-   const handleScheduleChange = (i, field, value) => {
+  const handleScheduleChange = (i, field, value) => {
     const updated = [...schedule];
     updated[i][field] = value;
     setSchedule(updated);
@@ -95,9 +95,9 @@ fetchEvent();
       Object.keys(form).forEach((key) => {
         data.append(key, form[key])
       });
-  data.append("schedule", JSON.stringify(schedule));
-     
-  data.append(
+      data.append("schedule", JSON.stringify(schedule));
+
+      data.append(
         "ticketTypes",
         JSON.stringify(
           ticketTypes
@@ -112,7 +112,7 @@ fetchEvent();
         }
       })
       toast.success("Event updated succesfully!")
-    navigate("/my-events");
+      navigate("/my-events");
 
     } catch (error) {
       toast.error(error.response?.data?.message || "Event update failed");
@@ -120,148 +120,200 @@ fetchEvent();
 
   }
   return (
-   <div className="max-w-2xl mx-auto px-4 py-4">
-<h1 className="text-xl md:text-2xl font-bold">Edit Event</h1>
-      <form onSubmit={handleSubmit}
-        className="space-y-3">
-        <input
-          name="title"
-          placeholder="Event Title..."
-          value={form.title}
-          onChange={handleChange}
-          className="border w-full p-2 rounded"
-          required
-        />
-        <input
-          name="location"
-          placeholder="location"
-          value={form.location}
-          onChange={handleChange}
-          className="border w-full p-2 rounded"
-          required
-        />
-        <input
-        type="date"
-          name="date"
-          placeholder="date"
-          value={form.date}
-          onChange={handleChange}
-          className="border w-full p-2 rounded"
-          required
-        />
-        <input
-          name="time"
-          placeholder="Time (e.g. 10:00 AM)"
-          className="border p-2 w-full"
-          value={form.time}
-          onChange={handleChange}
-        />
+    <div className="max-w-4xl mx-auto px-4 py-10">
 
-        <input
-          name="category"
-          placeholder="Category (e.g. music)"
-          className="border p-2 w-full"
-          value={form.category}
-          onChange={handleChange}
-        />
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+        Edit Event
+      </h1>
 
-        <textarea
-          name="description"
-          placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-        
-        <h1 className="text-xl font-bold">Schedule</h1>
-        
-          {(schedule ?? []).map((s, i) => (
-            <div key={i}
-            className="border p-3 rounded space-y-2"
-            >
-           <input placeholder="title"
-                  value={s.title}
-                  className="border p-1 w-full"
-                  onChange={(e)=>handleScheduleChange(i,"title",e.target.value)}
-           />
-             <input placeholder="speaker"
-                  value={s.speaker}
-                  className="border p-1 w-full"
-                  onChange={(e)=>handleScheduleChange(i,"speaker",e.target.value)}
-           />
-             <input placeholder="StartTime"
-                  value={s.startTime}
-                  className="border p-1 w-full"
-                  onChange={(e)=>handleScheduleChange(i,"startTime",e.target.value)}
-           />
-             <input placeholder="EndTime"
-                  value={s.endTime}
-                  className="border p-1 w-full"
-                  onChange={(e)=>handleScheduleChange(i,"endTime",e.target.value)}
-           />
-           <button type="button"
-                   className="text-red-500"
-                   onClick={()=>removeSchedule(i)}  
-           >
-            remove
-           </button>
+      <form onSubmit={handleSubmit} className="space-y-8">
 
-            </div>
-          ))
+        {/* BASIC DETAILS */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
 
-        }
-        <button type="button"
-         className="bg-gray-300 px-2 py-1 rounded"
-                onClick={addSchedule}
-        >+ Add schedule</button>
-        <h1 className="text-xl font-bold">Ticket Types</h1>
-        <div>
-          {
-            Array.isArray(ticketTypes) &&ticketTypes.map((t, i) => (
-              <div key={i}
-             className="flex flex-col md:flex-row gap-2"
-              >
-                <input
-                  placeholder="Type(VIP/GENERAL)"
-                  value={t.type}
-                  className="border p-2 rounded flex-1"
-                  onChange={(e) => handleTicketChange(i, "type", e.target.value)}
-                />
-                <input
-                  type="number"
-                  placeholder="price"
-                  className="border p-2 rounded w-full md:w-28"
-                  value={t.price}
-                  onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))}
-                />
-                <button
-                  type="button"
-                  className="text-red-500 text-lg px-2 font-bold"
-                  onClick={()=>removeTicket(i)}> ×</button>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Basic Details
+          </h2>
 
-              </div>
-            ))
-          }
-          <button
-            type="button"
-            className="mt-2 bg-gray-300 px-2 py-1 rounded"
-            onClick={addTicketType}>+Add Ticket Type</button>
+          <input
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+            required
+          />
+
+          <input
+            name="location"
+            value={form.location}
+            onChange={handleChange}
+            className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+            required
+          />
+
+          <input
+            type="date"
+            name="date"
+            value={form.date}
+            onChange={handleChange}
+            className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+            required
+          />
+
+          <input
+            name="time"
+            value={form.time}
+            onChange={handleChange}
+            className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+
+          <input
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+            required
+          />
+
         </div>
 
-        <input
-          type="file"
-          className="w-full border p-2 rounded"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files[0])}
-          
-        />
-        <button
-          className="bg-green-500 text-white w-full p-2 rounded hover:bg-green-600"
-        >Update Event</button>
+        {/* 🧱 SCHEDULE */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
+
+          <h2 className="text-lg font-semibold text-gray-900">
+            Schedule
+          </h2>
+
+          {(schedule ?? []).map((s, i) => (
+            <div key={i} className="border border-gray-200 p-4 rounded-lg space-y-2 bg-gray-50">
+
+              <input
+                value={s.title}
+                className="border border-gray-200 px-3 py-2 rounded-lg w-full"
+                onChange={(e) => handleScheduleChange(i, "title", e.target.value)}
+              />
+
+              <input
+                value={s.speaker}
+                className="border border-gray-200 px-3 py-2 rounded-lg w-full"
+                onChange={(e) => handleScheduleChange(i, "speaker", e.target.value)}
+              />
+
+              <input
+                value={s.startTime}
+                className="border border-gray-200 px-3 py-2 rounded-lg w-full"
+                onChange={(e) => handleScheduleChange(i, "startTime", e.target.value)}
+              />
+
+              <input
+                value={s.endTime}
+                className="border border-gray-200 px-3 py-2 rounded-lg w-full"
+                onChange={(e) => handleScheduleChange(i, "endTime", e.target.value)}
+              />
+
+              <button
+                type="button"
+                onClick={() => removeSchedule(i)}
+                className="text-sm text-red-500 hover:underline"
+              >
+                Remove
+              </button>
+
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addSchedule}
+            className="text-sm px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            + Add Schedule
+          </button>
+
+        </div>
+
+        {/* 🧱 TICKETS */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
+
+          <h2 className="text-lg font-semibold text-gray-900">
+            Ticket Types
+          </h2>
+
+          {Array.isArray(ticketTypes) &&
+            ticketTypes.map((t, i) => (
+              <div key={i} className="flex flex-col md:flex-row gap-2 items-center">
+
+                <input
+                  value={t.type}
+                  className="border border-gray-200 px-3 py-2 rounded-lg flex-1 w-full"
+                  onChange={(e) => handleTicketChange(i, "type", e.target.value)}
+                />
+
+                <input
+                  type="number"
+                  value={t.price}
+                  className="border border-gray-200 px-3 py-2 rounded-lg w-full md:w-28"
+                  onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => removeTicket(i)}
+                  className="text-red-500 text-lg font-bold px-2"
+                >
+                  ×
+                </button>
+
+              </div>
+            ))}
+
+          <button
+            type="button"
+            onClick={addTicketType}
+            className="text-sm px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            + Add Ticket Type
+          </button>
+
+        </div>
+
+        {/* 🧱 IMAGE */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-2">
+
+          <h2 className="text-lg font-semibold text-gray-900">
+            Update Image
+          </h2>
+
+          <input
+            type="file"
+            accept="image/*"
+            className="w-full border border-gray-200 px-3 py-2 rounded-lg"
+            onChange={(e) => setImage(e.target.files[0])}
+          />
+
+        </div>
+
+        {/* SUBMIT */}
+        <div className="text-right">
+
+          <button
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+          >
+            Update Event
+          </button>
+
+        </div>
+
       </form>
     </div>
-  )
+  );
 }
 
 export default EditEvent;
