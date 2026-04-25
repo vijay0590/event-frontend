@@ -99,7 +99,7 @@ const Home = () => {
                 </div>
 
             </section>
-            <div id="events" className="scroll-mt-32 max-w-7xl mx-auto px-4 py-12">
+            <div id="events" className="scroll-mt-24 max-w-7xl mx-auto px-4 py-12">
 
                 <div className="bg-white p-4 rounded-xl shadow mb-6 flex flex-col gap-3 md:flex-row md:flex-wrap">
                     <input
