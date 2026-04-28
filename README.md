@@ -6,7 +6,7 @@ A full-stack Event Management application where users can explore events, book t
 
 ## 🚀 Live Demo
 
-* 🔗 Frontend: https://eventx-app.netlify.app/
+* 🔗 Frontend:https://creative-zuccutto-44127f.netlify.app/
 * 🔗 Backend: https://online-6fl3.onrender.com
 
 ---
