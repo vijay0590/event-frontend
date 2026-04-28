@@ -227,6 +227,9 @@ const EventDetails = () => {
               >
                 <p className="font-medium">{t.type}</p>
                 <p className="text-gray-600">₹{t.price}</p>
+                <p className="text-sm text-gray-500">
+  {ticket.available} / {ticket.total} available
+</p>
               </div>
             ))}
           </div>

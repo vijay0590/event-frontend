@@ -10,18 +10,18 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+     localStorage.removeItem("user"); 
     setUser(null);
     navigate("/login");
   };
 
-  const role = (user?.role || user?.accountType)?.toLowerCase();
+ const role = user?.role?.toLowerCase();
 
-  const activeClass = (path) => {
-    return location.pathname === path
-      ? "text-indigo-600 font-semibold"
-      : "";
-  };
-
+ const activeClass = (path) => {
+  return location.pathname.startsWith(path)
+    ? "text-indigo-600 font-semibold"
+    : "";
+};
   // Prevent background scroll when menu open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto";
