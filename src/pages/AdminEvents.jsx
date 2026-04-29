@@ -28,7 +28,7 @@ const AdminEvents = () => {
   };
   const fetchEvents = async (id) => {
     try {
-      const res = await API.get("/api/events/pending")
+      const res = await API.get("/api/events/admin/pending")
       setEvents(res.data.events);
 
     } catch (err) {

@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import toast from "react-hot-toast";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const EventDetails = () => {
+  const { user } = useContext(AuthContext);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -76,7 +79,7 @@ const EventDetails = () => {
         name: event.title,
         description: "Event Ticket",
         order_id: order.id,
-        
+
         //verify payment
         handler: async function (response) {
           try {
@@ -146,9 +149,11 @@ const EventDetails = () => {
       rzp.open();
       setLoading(false);
     } catch (error) {
-      console.log(error);
-      toast.error("Payment failed ❌");
-    }
+  toast.error(
+    error.response?.data?.message || "Payment failed ❌"
+  );
+  setLoading(false);
+}
   };
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
@@ -160,7 +165,11 @@ const EventDetails = () => {
 
           {/* IMAGE */}
           <img
-            src={`${import.meta.env.VITE_API_URL}${event.images?.[0]}`}
+            src={
+              event.images?.[0]
+                ? `${import.meta.env.VITE_API_URL}${event.images[0]}`
+                : "/no-image.png"
+            }
             className="w-full h-64 object-cover rounded-2xl"
           />
 
@@ -221,15 +230,15 @@ const EventDetails = () => {
                 key={i}
                 onClick={() => setSelectedType(t.type)}
                 className={`p-3 border rounded-lg cursor-pointer flex justify-between ${selectedType === t.type
-                    ? "border-indigo-600 bg-indigo-50"
-                    : "border-gray-200"
+                  ? "border-indigo-600 bg-indigo-50"
+                  : "border-gray-200"
                   }`}
               >
                 <p className="font-medium">{t.type}</p>
                 <p className="text-gray-600">₹{t.price}</p>
                 <p className="text-sm text-gray-500">
-  {ticket.available} / {ticket.total} available
-</p>
+                  {t.available ?? 0} / {t.total ?? 0} available
+                </p>
               </div>
             ))}
           </div>
@@ -264,17 +273,26 @@ const EventDetails = () => {
             Total: ₹{totalAmount || 0}
           </p>
 
-          {/* CTA */}
-          <button
-            onClick={handlePayment}
-            disabled={loading}
-            className={`w-full mt-4 py-3 rounded-lg text-white ${loading
-                ? "bg-gray-400"
-                : "bg-indigo-600 hover:bg-indigo-700"
-              }`}
-          >
-            {loading ? "Processing..." : "Book & Pay"}
-          </button>
+          
+         {/*  ROLE MESSAGE */}
+{user?.role !== "user" && (
+  <p className="text-red-500 text-sm mt-2">
+    Only users can book tickets
+  </p>
+)}
+
+{/*  BUTTON */}
+<button
+  onClick={handlePayment}
+  disabled={loading || user?.role !== "user"}  // ✅ added role check
+  className={`w-full mt-4 py-3 rounded-lg text-white ${
+    loading || user?.role !== "user"
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-indigo-600 hover:bg-indigo-700"
+  }`}
+>
+  {loading ? "Processing..." : "Book & Pay"}
+</button>
 
         </div>
 

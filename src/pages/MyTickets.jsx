@@ -6,13 +6,17 @@ import BackButton from "../components/BackButton";
 const MyTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [emails, setEmails] = useState({});
+  const [filter, setFilter] = useState("ALL");
+  const [loading, setLoading] = useState(true);
 
   const fetchTickets = async () => {
     try {
       const res = await API.get("/api/tickets/my");
       setTickets(res.data.tickets);
     } catch (err) {
-      console.log(err);
+      toast.error("Failed to load tickets");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -22,7 +26,6 @@ const MyTickets = () => {
       toast.success("Ticket cancelled");
       fetchTickets();
     } catch (err) {
-      console.log(err.response?.data);
       toast.error(err.response?.data?.message || "Cancel failed");
     }
   };
@@ -35,7 +38,6 @@ const MyTickets = () => {
       toast.success("Ticket transferred");
       fetchTickets();
     } catch (err) {
-      console.log(err.response?.data);
       toast.error(err.response?.data?.message || "Transfer failed");
     }
   };
@@ -44,93 +46,176 @@ const MyTickets = () => {
     fetchTickets();
   }, []);
 
+  // ✅ FILTER LOGIC
+  const filteredTickets =
+    filter === "ALL"
+      ? tickets
+      : tickets.filter((t) => t.status === filter);
+
+  if (loading) {
+    return <p className="text-center mt-10">Loading...</p>;
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-     
-  <BackButton />
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+      <BackButton />
+
+      <h1 className="text-3xl font-bold text-center mb-6">
         My Tickets
       </h1>
 
-      {tickets.length === 0 ? (
-        <div className="text-center text-gray-500 mt-20">
-          🎟️ No tickets booked yet
+      {/* 🔥 SUMMARY */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl shadow-sm text-center">
+          <p className="text-sm text-gray-500">Total</p>
+          <h2 className="text-lg font-semibold">{tickets.length}</h2>
         </div>
+
+        <div className="bg-white p-4 rounded-xl shadow-sm text-center">
+          <p className="text-sm text-gray-500">Booked</p>
+          <h2 className="text-green-600 font-semibold">
+            {tickets.filter(t => t.status === "BOOKED").length}
+          </h2>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow-sm text-center">
+          <p className="text-sm text-gray-500">Cancelled</p>
+          <h2 className="text-red-600 font-semibold">
+            {tickets.filter(t => t.status === "CANCELLED").length}
+          </h2>
+        </div>
+      </div>
+
+      {/* 🔥 FILTER */}
+      <div className="flex gap-3 mb-6 justify-center">
+        {["ALL", "BOOKED", "CANCELLED"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-2 rounded-xl text-sm ${
+              filter === f
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
+      {/* CONTENT */}
+      {filteredTickets.length === 0 ? (
+        <p className="text-center text-gray-500 mt-10">
+          No tickets found
+        </p>
       ) : (
-        <div className="space-y-5">
-          {tickets.map((t) => (
-            <div
-              key={t._id}
-              className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 hover:shadow-md transition"
-            >
-              {/* HEADER */}
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {t.event?.title || "Event not available"}
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    Quantity: {t.quantity}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {t.event?.date} • {t.event?.time}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {t.event?.location}
-                  </p>
-                </div>
+        <div className="space-y-6">
+          {filteredTickets.map((t) => {
+            const event = t.event;
 
-                {/* STATUS BADGE */}
-                <span
-                  className={`text-xs px-3 py-1 rounded-full ${
-                    t.status === "BOOKED"
-                      ? "bg-green-100 text-green-600"
-                      : t.status === "PENDING"
-                      ? "bg-yellow-100 text-yellow-600"
-                      : "bg-red-100 text-red-600"
-                  }`}
-                >
-                  {t.status}
-                </span>
-              </div>
+            const formattedDate = event?.date
+              ? new Date(event.date).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })
+              : "N/A";
 
-              {/* TRANSFER INPUT (only if booked) */}
-              {t.status === "BOOKED" && (
-                <input
-                  type="email"
-                  placeholder="Transfer ticket to email"
-                  value={emails[t._id] || ""}
-                  onChange={(e) =>
-                    setEmails({ ...emails, [t._id]: e.target.value })
+            return (
+              <div
+                key={t._id}
+                className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row"
+              >
+                {/* IMAGE */}
+                <img
+                  src={
+                    event?.images?.[0]
+                      ? `${import.meta.env.VITE_API_URL}${event.images[0]}`
+                      : "/no-image.png"
                   }
-                  className="mt-4 border border-gray-200 px-3 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full md:w-48 h-40 object-cover"
                 />
-              )}
 
-              {/* ACTIONS */}
-              <div className="flex gap-3 mt-4">
-                {/* Cancel only if BOOKED */}
-                {t.status === "BOOKED" && (
-                  <button
-                    onClick={() => handleCancel(t._id)}
-                    className="text-sm px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
-                  >
-                    Cancel
-                  </button>
-                )}
+                {/* DETAILS */}
+                <div className="p-5 flex-1 space-y-2">
 
-                {/* Transfer only if BOOKED */}
-                {t.status === "BOOKED" && (
-                  <button
-                    onClick={() => handleTransfer(t._id)}
-                    className="text-sm px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
-                  >
-                    Transfer
-                  </button>
-                )}
+                  <div className="flex justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">
+                        {event?.title}
+                      </h2>
+
+                      <p className="text-sm text-gray-500">
+                        {formattedDate} • {event?.time}
+                      </p>
+
+                      <p className="text-sm text-gray-600">
+                        📍 {event?.location}
+                      </p>
+
+                      <p className="text-sm">
+                        🎟 {t.ticketType} • Qty: {t.quantity}
+                      </p>
+
+                      <p className="text-xs text-gray-500">
+                        Payment: {t.paymentStatus}
+                      </p>
+                    </div>
+
+                    {/* STATUS */}
+                    <span
+                      className={`text-xs px-3 py-1 rounded-full h-fit ${
+                        t.status === "BOOKED"
+                          ? "bg-green-100 text-green-600"
+                          : t.status === "PENDING"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : "bg-red-100 text-red-600"
+                      }`}
+                    >
+                      {t.status}
+                    </span>
+                  </div>
+
+                  {/* INPUT */}
+                  {t.status === "BOOKED" && (
+                    <input
+                      type="email"
+                      placeholder="Transfer to email"
+                      value={emails[t._id] || ""}
+                      onChange={(e) =>
+                        setEmails({ ...emails, [t._id]: e.target.value })
+                      }
+                      className="mt-3 w-full px-4 py-2 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  )}
+
+                  {/* ACTIONS */}
+                  {t.status === "BOOKED" && (
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={() => handleCancel(t._id)}
+                        className="px-4 py-2 text-sm rounded-xl bg-red-50 text-red-600 hover:bg-red-100"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        onClick={() => handleTransfer(t._id)}
+                        disabled={!emails[t._id]}
+                        className={`px-4 py-2 text-sm rounded-xl ${
+                          emails[t._id]
+                            ? "bg-gray-100 hover:bg-gray-200"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        Transfer
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

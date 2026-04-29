@@ -10,18 +10,24 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-     localStorage.removeItem("user"); 
+    localStorage.removeItem("user");
     setUser(null);
     navigate("/login");
   };
 
- const role = user?.role?.toLowerCase();
+  const role = user?.role?.toLowerCase();
 
- const activeClass = (path) => {
-  return location.pathname.startsWith(path)
-    ? "text-indigo-600 font-semibold"
-    : "";
-};
+  const activeClass = (path) => {
+    if (path === "/") {
+      return location.pathname === "/"
+        ? "text-indigo-600 font-semibold"
+        : "";
+    }
+
+    return location.pathname.startsWith(path)
+      ? "text-indigo-600 font-semibold"
+      : "";
+  };
   // Prevent background scroll when menu open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto";
@@ -60,12 +66,15 @@ const Navbar = () => {
             EventX
           </span>
         </div>
-
         {/* DESKTOP MENU */}
         <div className="hidden md:flex gap-6 items-center text-sm font-medium">
 
-          <Link to="/" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/")}`}>Home</Link>
-
+          <Link
+            to="/"
+            className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/")}`}
+          >
+            Home
+          </Link>
           {!user && (
             <>
               <Link to="/login" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/login")}`}>Login</Link>
