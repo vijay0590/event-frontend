@@ -185,7 +185,7 @@ const Home = () => {
                                 <div className="relative">
                                    <img
   src={
-    event.images?.[0]
+    e.images?.[0]
       ? `${import.meta.env.VITE_API_URL}${event.images[0]}`
       : "/no-image.png"
   }
