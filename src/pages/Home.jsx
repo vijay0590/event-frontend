@@ -183,14 +183,18 @@ const Home = () => {
 
                                 {/* IMAGE */}
                                 <div className="relative">
-                                   <img
-  src={
-    e.images?.[0]
-      ? `${import.meta.env.VITE_API_URL}${event.images[0]}`
-      : "/no-image.png"
-  }
-  className="w-full h-48 object-cover rounded-xl"
-/>
+                                    <img
+                                        src={
+                                            event?.images?.length > 0
+                                                ? `${import.meta.env.VITE_API_URL}${event.images[0]}`
+                                                : "/no-image.png"
+                                        }
+                                        alt="event"
+                                        className="w-full md:w-48 h-40 object-cover"
+                                        onError={(e) => (e.target.src = "/no-image.png")}
+
+                                        className="w-full h-48 object-cover rounded-xl"
+                                    />
 
                                     {/* CATEGORY BADGE */}
                                     <span className="absolute top-3 left-3 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
