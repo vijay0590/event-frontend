@@ -185,15 +185,13 @@ const Home = () => {
                                 <div className="relative">
                                     <img
                                         src={
-                                            event?.images?.length > 0
-                                                ? `${import.meta.env.VITE_API_URL}${event.images[0]}`
+                                            e?.images?.length > 0
+                                                ? `${import.meta.env.VITE_API_URL}${e.images[0]}`
                                                 : "/no-image.png"
                                         }
                                         alt="event"
-                                        className="w-full md:w-48 h-40 object-cover"
-                                        onError={(e) => (e.target.src = "/no-image.png")}
-
                                         className="w-full h-48 object-cover rounded-xl"
+                                        onError={(e) => (e.target.src = "/no-image.png")}
                                     />
 
                                     {/* CATEGORY BADGE */}
