@@ -42,9 +42,23 @@ const MyTickets = () => {
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
+  fetchTickets();
+
+  const interval = setInterval(() => {
     fetchTickets();
-  }, []);
+  }, 3000);
+
+  // stop after 15 seconds (5 calls)
+  const timeout = setTimeout(() => {
+    clearInterval(interval);
+  }, 15000);
+
+  return () => {
+    clearInterval(interval);
+    clearTimeout(timeout);
+  };
+}, []);
 
   // ✅ FILTER LOGIC
   const filteredTickets =
