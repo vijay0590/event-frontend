@@ -176,6 +176,8 @@ const Home = () => {
                     ) : (
 
                         filteredEvents.map((e) => (
+                              
+                             
                             <div
                                 key={e._id}
                                 className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300 overflow-hidden"
@@ -184,15 +186,15 @@ const Home = () => {
                                 {/* IMAGE */}
                                 <div className="relative">
                                     <img
-                                        src={
-                                            e?.images?.length > 0
-                                                ? `${import.meta.env.VITE_API_URL}${e.images[0]}`
-                                                : "/no-image.png"
-                                        }
-                                        alt="event"
-                                        className="w-full h-48 object-cover rounded-xl"
-                                        onError={(e) => (e.target.src = "/no-image.png")}
-                                    />
+  src={
+    e?.images?.[0]
+      ? `${import.meta.env.VITE_API_URL}/${e.images[0].replace(/^\/+/, "")}`
+      : "/no-image.png"
+  }
+  alt="event"
+  className="w-full h-48 object-cover rounded-xl"
+  onError={(e) => (e.target.src = "/no-image.png")}
+/>
 
                                     {/* CATEGORY BADGE */}
                                     <span className="absolute top-3 left-3 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
