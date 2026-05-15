@@ -27,7 +27,8 @@ const MyTickets = () => {
   }, []);
 
   // ===== CANCEL LOGIC =====
-  const handleCancel = async (id) => {
+  const handleCancel = async (id, isPastEvent) => {
+    if (isPastEvent) return toast.error("Cannot cancel tickets for past events");
     if (!window.confirm("Are you sure? This action cannot be undone and your seat will be released.")) return;
 
     try {
@@ -43,7 +44,9 @@ const MyTickets = () => {
   };
 
   // ===== TRANSFER LOGIC =====
-  const handleTransfer = async (id) => {
+  const handleTransfer = async (id, isPastEvent) => {
+    if (isPastEvent) return toast.error("Cannot transfer tickets for past events");
+    
     const email = emails[id]?.trim();
     if (!email || !email.includes("@")) return toast.error("Please enter a valid recipient email");
 
@@ -118,8 +121,16 @@ const MyTickets = () => {
           <div className="space-y-8">
             {filteredTickets.map((t) => {
               const event = t.event;
+              
+              // Date checks to see if event has concluded
+              const today = new Date();
+              today.setHours(0,0,0,0);
+              const eventDate = event?.date ? new Date(event.date) : null;
+              if (eventDate) eventDate.setHours(0,0,0,0);
+              const isPastEvent = eventDate ? eventDate < today : false;
+
               const statusColors = {
-                BOOKED: "bg-emerald-100 text-emerald-700",
+                BOOKED: isPastEvent ? "bg-gray-100 text-gray-600" : "bg-emerald-100 text-emerald-700",
                 PENDING: "bg-amber-100 text-amber-700",
                 CANCELLED: "bg-rose-100 text-rose-700"
               };
@@ -136,14 +147,13 @@ const MyTickets = () => {
                     />
                     <div className="absolute top-4 left-4">
                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-sm ${statusColors[t.status]}`}>
-                        {t.status}
+                        {t.status === "BOOKED" && isPastEvent ? "COMPLETED" : t.status}
                       </span>
                     </div>
                   </div>
 
                   {/* INFO SECTION */}
                   <div className="p-8 flex-1 flex flex-col justify-between relative">
-                    {/* Visual Ticket Notch (Desktop only) */}
                     <div className="hidden lg:block absolute left-[-12px] top-1/2 -translate-y-1/2 w-6 h-12 bg-[#f8fafc] border border-gray-100 rounded-full"></div>
 
                     <div>
@@ -164,33 +174,41 @@ const MyTickets = () => {
 
                     {t.status === "BOOKED" && (
                       <div className="mt-6 pt-6 border-t border-dashed border-gray-100 flex flex-col md:flex-row items-end gap-4">
-                        <div className="w-full flex-1">
-                          <label className="text-[10px] font-black text-gray-400 uppercase mb-2 block ml-1">Transfer Seat</label>
-                          <div className="flex gap-2">
-                            <input
-                              type="email"
-                              placeholder="recipient@email.com"
-                              value={emails[t._id] || ""}
-                              onChange={(e) => setEmails({ ...emails, [t._id]: e.target.value })}
-                              className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition"
-                            />
-                            <button
-                              disabled={!emails[t._id] || actionLoading === t._id}
-                              onClick={() => handleTransfer(t._id)}
-                              className="px-6 py-2.5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-600 transition disabled:opacity-30"
-                            >
-                              {actionLoading === t._id ? "..." : "Send"}
-                            </button>
+                        {isPastEvent ? (
+                          <div className="w-full text-center py-2 bg-gray-50 rounded-xl text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            This event has concluded. Gate access is locked.
                           </div>
-                        </div>
-                        
-                        <button
-                          disabled={actionLoading === t._id}
-                          onClick={() => handleCancel(t._id)}
-                          className="w-full md:w-auto px-6 py-2.5 bg-rose-50 text-rose-500 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition disabled:opacity-30"
-                        >
-                          Cancel Booking
-                        </button>
+                        ) : (
+                          <>
+                            <div className="w-full flex-1">
+                              <label className="text-[10px] font-black text-gray-400 uppercase mb-2 block ml-1">Transfer Seat</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="email"
+                                  placeholder="recipient@email.com"
+                                  value={emails[t._id] || ""}
+                                  onChange={(e) => setEmails({ ...emails, [t._id]: e.target.value })}
+                                  className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition"
+                                />
+                                <button
+                                  disabled={!emails[t._id] || actionLoading === t._id}
+                                  onClick={() => handleTransfer(t._id, isPastEvent)}
+                                  className="px-6 py-2.5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-600 transition disabled:opacity-30"
+                                >
+                                  {actionLoading === t._id ? "..." : "Send"}
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <button
+                              disabled={actionLoading === t._id}
+                              onClick={() => handleCancel(t._id, isPastEvent)}
+                              className="w-full md:w-auto px-6 py-2.5 bg-rose-50 text-rose-500 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition disabled:opacity-30"
+                            >
+                              Cancel Booking
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
