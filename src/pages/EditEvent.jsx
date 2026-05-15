@@ -44,7 +44,9 @@ const EditEvent = () => {
         });
 
         setTicketTypes(e.ticketTypes || []);
-        setCurrentImage(e.image); // Save existing image path
+        
+        // SAFE ARRAY REFERENCE AND CHECK
+        setCurrentImage(e.images?.[0] || "");
       } catch (err) {
         toast.error("Failed to load event data");
         navigate(-1);
@@ -81,9 +83,17 @@ const EditEvent = () => {
     try {
       setSaving(true);
       const data = new FormData();
+      
+      // Append core structural elements
       Object.keys(form).forEach((key) => data.append(key, form[key]));
       data.append("ticketTypes", JSON.stringify(ticketTypes));
-      if (image) data.append("image", image);
+      
+      // LOGIC: Maintain continuity or apply new image update
+      if (image) {
+        data.append("image", image);
+      } else {
+        data.append("existingImage", currentImage);
+      }
 
       await API.put(`/api/events/${id}`, data);
       toast.success("Changes saved! ✨");
@@ -174,7 +184,11 @@ const EditEvent = () => {
                 {preview ? (
                   <img src={preview} className="h-48 w-80 object-cover rounded-2xl shadow-xl border-4 border-white" alt="New" />
                 ) : currentImage ? (
-                  <img src={currentImage} className="h-48 w-80 object-cover rounded-2xl shadow-md border-4 border-white" alt="Current" />
+                  <img 
+                    src={`${import.meta.env.VITE_API_URL}/${currentImage.replace(/^\/+/, "")}`} 
+                    className="h-48 w-80 object-cover rounded-2xl shadow-md border-4 border-white" 
+                    alt="Current" 
+                  />
                 ) : (
                   <div className="h-48 w-80 bg-gray-200 rounded-2xl flex items-center justify-center text-gray-400">No Image</div>
                 )}

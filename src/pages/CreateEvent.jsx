@@ -113,6 +113,7 @@ const CreateEvent = () => {
                   <option value="tech">Tech</option>
                   <option value="sports">Sports</option>
                   <option value="entertainment">Entertainment</option>
+                  <option value="Health">Health</option>
                 </select>
               </div>
               <textarea name="description" placeholder="Describe the vibe, the rules, and what to expect..." value={form.description} onChange={handleChange} className={`${inputClass} h-32 resize-none`} />
@@ -175,7 +176,7 @@ const CreateEvent = () => {
             disabled={loading}
             className="w-full bg-indigo-600 text-white py-5 rounded-2xl text-xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0"
           >
-            {loading ? "PROCESING..." : "PUBLISH EVENT"}
+            {loading ? "PROCESSING..." : "PUBLISH EVENT"}
           </button>
         </form>
       </div>

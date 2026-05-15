@@ -102,17 +102,18 @@ const Attendees = () => {
           </button>
         </div>
 
-        {/* SUMMARY CARDS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-indigo-600 p-6 rounded-3xl text-white shadow-lg shadow-indigo-100">
-            <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest">Total Guests</p>
-            <p className="text-3xl font-black">{attendees.length}</p>
-          </div>
-          <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-sm">
-            <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Tickets Issued</p>
-            <p className="text-3xl font-black text-gray-800">{totalTickets}</p>
-          </div>
-        </div>
+       {/* SUMMARY CARDS */}
+<div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-8">
+  <div className="bg-indigo-600 p-6 rounded-3xl text-white shadow-lg shadow-indigo-100">
+    <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest">Total Guests</p>
+    <p className="text-3xl font-black">{attendees.length}</p>
+  </div>
+  
+  <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-sm">
+    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Tickets Issued</p>
+    <p className="text-3xl font-black text-gray-800">{totalTickets}</p>
+  </div>
+</div>
 
         {/* SEARCH BAR */}
         <div className="mb-6">

@@ -42,7 +42,7 @@ const Navbar = () => {
         
         {/* LOGO SECTION */}
         <div 
-          onClick={() => navigate("/")} 
+          onClick={() => { navigate("/"); setOpen(false); }} 
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:rotate-12 transition-transform">
@@ -93,7 +93,7 @@ const Navbar = () => {
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <p className="text-[10px] text-gray-400 leading-none mb-1">{role}</p>
-                  <p className="text-gray-900 normal-case tracking-normal font-bold">{user.name.split(' ')[0]}</p>
+                  <p className="text-gray-900 normal-case tracking-normal font-bold">{user.name?.split(' ')[0] || "User"}</p>
                 </div>
                 <button 
                   onClick={handleLogout}
@@ -132,23 +132,23 @@ const Navbar = () => {
           
           {user ? (
             <>
-              {role === "user" && <Link to="/my-tickets">My Tickets</Link>}
-              {role === "organiser" && <Link to="/organiser-dashboard">Dashboard</Link>}
-              {role === "admin" && <Link to="/admin">Admin</Link>}
+              {role === "user" && <Link onClick={() => setOpen(false)} to="/my-tickets">My Tickets</Link>}
+              {role === "organiser" && <Link onClick={() => setOpen(false)} to="/organiser-dashboard">Dashboard</Link>}
+              {role === "admin" && <Link onClick={() => setOpen(false)} to="/admin">Admin</Link>}
               
-              <Link to="/profile" className="text-indigo-400">Profile Settings</Link>
+              <Link onClick={() => setOpen(false)} to="/profile" className="text-indigo-400">Profile Settings</Link>
               
               <button 
                 onClick={handleLogout}
-                className="mt-10 px-8 py-3 bg-rose-600 rounded-2xl text-sm"
+                className="mt-10 px-8 py-3 bg-rose-600 rounded-2xl text-sm font-black uppercase tracking-widest"
               >
                 Sign Out
               </button>
             </>
           ) : (
             <>
-              <Link to="/login">Sign In</Link>
-              <Link to="/register" className="text-indigo-400">Join EventX</Link>
+              <Link onClick={() => setOpen(false)} to="/login">Sign In</Link>
+              <Link onClick={() => setOpen(false)} to="/register" className="text-indigo-400">Join EventX</Link>
             </>
           )}
         </div>

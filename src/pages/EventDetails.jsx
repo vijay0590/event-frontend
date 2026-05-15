@@ -14,6 +14,7 @@ const EventDetails = () => {
   const [selectedType, setSelectedType] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false); // Added error catch state
 
   const role = (user?.role || "").toLowerCase();
   const isUser = role === "user";
@@ -21,14 +22,32 @@ const EventDetails = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
+        setFetchError(false);
         const res = await API.get(`/api/events/${id}`);
         setEvent(res.data.event || res.data);
       } catch (error) {
+        setFetchError(true);
         toast.error("Failed to load event details");
       }
     };
     fetchEvent();
   }, [id]);
+
+  // Handle Error State Fallback
+  if (fetchError) {
+    return (
+      <PageLayout>
+        <div className="flex flex-col justify-center items-center h-[60vh] max-w-md mx-auto text-center px-4">
+          <p className="text-4xl mb-4">⚠️</p>
+          <h2 className="text-xl font-black text-gray-900 mb-2">Event Not Found</h2>
+          <p className="text-gray-500 text-sm mb-6">We couldn't retrieve the details for this event. It may have been removed or the link is broken.</p>
+          <button onClick={() => navigate("/")} className="px-6 py-2.5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-600 transition">
+            Go Back Home
+          </button>
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (authLoading || !event) {
     return (
@@ -61,13 +80,8 @@ const EventDetails = () => {
     setLoading(true);
 
     try {
-      // 1. Create Ticket and Order in one parallel burst
-      const [ticketRes, orderRes] = await Promise.all([
-        API.post("/api/tickets", { eventId: event._id, quantity, ticketType: selectedType, paymentMethod: "razorpay" }),
-        API.post("/api/payment/create-order", { amount: totalAmount || 1 })
-      ]);
-
-      const ticketId = ticketRes.data.ticket._id;
+      // 1. Create Order FIRST (No ticket is created yet)
+      const orderRes = await API.post("/api/payment/create-order", { amount: totalAmount || 1 });
       const order = orderRes.data;
 
       const options = {
@@ -80,19 +94,26 @@ const EventDetails = () => {
         handler: async (response) => {
           const verifyToast = toast.loading("Confirming booking...");
           try {
-            // 2. COMBINED VERIFICATION (Speeds up deployment delay)
-            // Ensure your backend /verify route also updates the ticket to 'paid' 
-            // to save one extra network request here.
+            // 2. CREATE TICKET AND VERIFY ON SUCCESSFUL CALLBACK
+            // The ticket collection is only created in the database now that money has changed hands
+            const ticketRes = await API.post("/api/tickets", { 
+              eventId: event._id, 
+              quantity, 
+              ticketType: selectedType, 
+              paymentMethod: "razorpay" 
+            });
+
+            const ticketId = ticketRes.data.ticket._id;
+
+            // 3. COMBINED VERIFICATION
             await API.post("/api/payment/verify", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              ticketId // Send ticketId here so backend can do everything at once
+              ticketId 
             });
 
             toast.success("Success! Redirecting...", { id: verifyToast });
-            
-            // 3. IMMEDIATE NAVIGATION
             navigate("/my-tickets", { replace: true });
           } catch (err) {
             toast.error("Verification failed. Please check My Tickets.", { id: verifyToast });
@@ -101,7 +122,12 @@ const EventDetails = () => {
         },
         prefill: { name: user?.name, email: user?.email },
         theme: { color: "#4f46e5" },
-        modal: { ondismiss: () => setLoading(false) }
+        modal: { 
+          ondismiss: () => {
+            toast.error("Payment cancelled by user.");
+            setLoading(false); 
+          }
+        }
       };
 
       const rzp = new window.Razorpay(options);

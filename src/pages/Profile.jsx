@@ -28,17 +28,19 @@ const Profile = () => {
     }
   }, [user]);
 
-  // ===== FETCH STATS =====
+  // ===== FETCH & DYNAMICALLY PARSE STATS =====
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const res = await API.get("/api/tickets/my");
-        // Mapping incoming data to local state structure
+        const tickets = res.data?.tickets || []; // Safely target the ticket array payload
+
+        // DYNAMIC DERIVATIVE CALCULATION
         setStats({
-          total: res.data?.total || 0,
-          active: res.data?.active || 0,
-          cancelled: res.data?.cancelled || 0,
-          pending: res.data?.pending || 0,
+          total: tickets.length,
+          active: tickets.filter((t) => t.status === "BOOKED").length,
+          cancelled: tickets.filter((t) => t.status === "CANCELLED").length,
+          pending: tickets.filter((t) => t.status === "PENDING").length,
         });
       } catch (err) {
         toast.error("Could not sync ticket analytics");

@@ -20,7 +20,7 @@ const Organiser = () => {
       try {
         const [statsRes, eventsRes] = await Promise.all([
           API.get("/api/analytics/overall"),
-          API.get("/api/events?limit=5"), // Bumped to 5 for a fuller list
+          await API.get("/api/events/me?limit=5"), // Bumped to 5 for a fuller list
         ]);
 
         setStats({

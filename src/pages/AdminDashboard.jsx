@@ -49,7 +49,7 @@ const AdminDashboard = () => {
       toast.success(`Event ${status.toLowerCase()} successfully`);
       setPendingEvents((prev) => prev.filter((e) => e._id !== id));
       // Refresh stats after approval
-      if(status === "APPROVED") setStats(s => ({...s, events: s.events + 1}));
+      if (status === "APPROVED") setStats(s => ({ ...s, events: s.events + 1 }));
     } catch {
       toast.error("Action failed. Please try again.");
     } finally {
@@ -105,7 +105,12 @@ const AdminDashboard = () => {
           <div className="bg-indigo-600 p-8 rounded-3xl shadow-xl shadow-indigo-100 relative overflow-hidden">
              <p className="text-indigo-200 font-bold uppercase text-xs tracking-widest mb-1">Total Revenue</p>
              <h2 className="text-4xl font-black text-white">₹{stats.revenue.toLocaleString('en-IN')}</h2>
-             <div className="mt-2 text-indigo-300 text-xs font-medium">Updated real-time from Stripe/Razorpay</div>
+             
+             {/* FIXED COPY: Adjusted from real-time to reflect static local state mapping */}
+             <div className="mt-2 text-indigo-300 text-xs font-medium flex items-center gap-1.5">
+               <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
+               Aggregated payment gateways snapshot
+             </div>
           </div>
         </div>
 
@@ -119,11 +124,11 @@ const AdminDashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
                   <Tooltip 
-                    cursor={{fill: '#f9fafb'}}
-                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}}
+                    cursor={{ fill: '#f9fafb' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                   />
                   <Bar dataKey="value" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={40} />
                 </BarChart>
