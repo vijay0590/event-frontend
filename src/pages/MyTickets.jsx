@@ -1,238 +1,215 @@
 import { useState, useEffect } from "react";
 import API from "../api/axios";
 import toast from "react-hot-toast";
-import BackButton from "../components/BackButton";
+import PageLayout from "../components/PageLayout";
 
 const MyTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [emails, setEmails] = useState({});
   const [filter, setFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
 
+  // ===== FETCH TICKETS =====
   const fetchTickets = async () => {
     try {
       const res = await API.get("/api/tickets/my");
-      setTickets(res.data.tickets);
+      setTickets(res.data.tickets || []);
     } catch (err) {
-      toast.error("Failed to load tickets");
+      toast.error("Failed to sync your ticket wallet");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  // ===== CANCEL LOGIC =====
   const handleCancel = async (id) => {
+    if (!window.confirm("Are you sure? This action cannot be undone and your seat will be released.")) return;
+
     try {
+      setActionLoading(id);
       await API.delete(`/api/tickets/${id}`);
-      toast.success("Ticket cancelled");
+      toast.success("Ticket successfully cancelled");
       fetchTickets();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Cancel failed");
+      toast.error(err.response?.data?.message || "Cancellation failed");
+    } finally {
+      setActionLoading(null);
     }
   };
 
+  // ===== TRANSFER LOGIC =====
   const handleTransfer = async (id) => {
+    const email = emails[id]?.trim();
+    if (!email || !email.includes("@")) return toast.error("Please enter a valid recipient email");
+
     try {
-      await API.put(`/api/tickets/transfer/${id}`, {
-        newUserEmail: emails[id],
-      });
-      toast.success("Ticket transferred");
+      setActionLoading(id);
+      await API.put(`/api/tickets/transfer/${id}`, { newUserEmail: email });
+      toast.success("Ticket transferred successfully!");
+      setEmails({ ...emails, [id]: "" });
       fetchTickets();
     } catch (err) {
       toast.error(err.response?.data?.message || "Transfer failed");
+    } finally {
+      setActionLoading(null);
     }
   };
 
- useEffect(() => {
-  fetchTickets();
-
-  const interval = setInterval(() => {
-    fetchTickets();
-  }, 3000);
-
-  // stop after 15 seconds (5 calls)
-  const timeout = setTimeout(() => {
-    clearInterval(interval);
-  }, 15000);
-
-  return () => {
-    clearInterval(interval);
-    clearTimeout(timeout);
-  };
-}, []);
-
-  // ✅ FILTER LOGIC
-  const filteredTickets =
-    filter === "ALL"
-      ? tickets
-      : tickets.filter((t) => t.status === filter);
+  const filteredTickets = filter === "ALL" ? tickets : tickets.filter((t) => t.status === filter);
 
   if (loading) {
-    return <p className="text-center mt-10">Loading...</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-24">
+        <div className="w-12 h-12 border-4 border-gray-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-400 font-medium">Opening your ticket wallet...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
-      <BackButton />
+    <PageLayout>
+      <div className="max-w-6xl mx-auto px-4 py-10">
+        
+        <header className="text-center mb-12">
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">My Tickets</h1>
+          <p className="text-gray-500 font-medium">View, transfer, or manage your event access.</p>
+        </header>
 
-      <h1 className="text-3xl font-bold text-center mb-6">
-        My Tickets
-      </h1>
-
-      {/* 🔥 SUMMARY */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-xl shadow-sm text-center">
-          <p className="text-sm text-gray-500">Total</p>
-          <h2 className="text-lg font-semibold">{tickets.length}</h2>
+        {/* STATS SUMMARY */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {[
+            { label: "Total Passes", val: tickets.length, color: "text-gray-900" },
+            { label: "Active", val: tickets.filter(t => t.status === "BOOKED").length, color: "text-emerald-600" },
+            { label: "Cancelled", val: tickets.filter(t => t.status === "CANCELLED").length, color: "text-rose-500" }
+          ].map((stat, i) => (
+            <div key={i} className="bg-white border border-gray-100 p-6 rounded-[2rem] shadow-sm flex items-center justify-between">
+              <span className="text-xs font-black uppercase tracking-widest text-gray-400">{stat.label}</span>
+              <span className={`text-2xl font-black ${stat.color}`}>{stat.val}</span>
+            </div>
+          ))}
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-sm text-center">
-          <p className="text-sm text-gray-500">Booked</p>
-          <h2 className="text-green-600 font-semibold">
-            {tickets.filter(t => t.status === "BOOKED").length}
-          </h2>
+        {/* FILTER NAVIGATION */}
+        <div className="flex items-center justify-center gap-2 mb-10 bg-gray-100/50 p-1.5 rounded-2xl w-fit mx-auto">
+          {["ALL", "BOOKED", "CANCELLED"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${
+                filter === f ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-sm text-center">
-          <p className="text-sm text-gray-500">Cancelled</p>
-          <h2 className="text-red-600 font-semibold">
-            {tickets.filter(t => t.status === "CANCELLED").length}
-          </h2>
-        </div>
-      </div>
+        {/* TICKET LIST */}
+        {filteredTickets.length === 0 ? (
+          <div className="text-center py-20 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
+            <p className="text-gray-400 font-medium italic">No tickets match your selection.</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {filteredTickets.map((t) => {
+              const event = t.event;
+              const statusColors = {
+                BOOKED: "bg-emerald-100 text-emerald-700",
+                PENDING: "bg-amber-100 text-amber-700",
+                CANCELLED: "bg-rose-100 text-rose-700"
+              };
 
-      {/* 🔥 FILTER */}
-      <div className="flex gap-3 mb-6 justify-center">
-        {["ALL", "BOOKED", "CANCELLED"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm ${
-              filter === f
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      {/* CONTENT */}
-      {filteredTickets.length === 0 ? (
-        <p className="text-center text-gray-500 mt-10">
-          No tickets found
-        </p>
-      ) : (
-        <div className="space-y-6">
-          {filteredTickets.map((t) => {
-            const event = t.event;
-
-            const formattedDate = event?.date
-              ? new Date(event.date).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })
-              : "N/A";
-
-            return (
-              <div
-                key={t._id}
-                className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row"
-              >
-                {/* IMAGE */}
-                <img
-                  src={
-                    event?.images?.[0]
-                      ? `${import.meta.env.VITE_API_URL}${event.images[0]}`
-                      : "/no-image.png"
-                  }
-                  className="w-full md:w-48 h-40 object-cover"
-                />
-
-                {/* DETAILS */}
-                <div className="p-5 flex-1 space-y-2">
-
-                  <div className="flex justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold">
-                        {event?.title}
-                      </h2>
-
-                      <p className="text-sm text-gray-500">
-                        {formattedDate} • {event?.time}
-                      </p>
-
-                      <p className="text-sm text-gray-600">
-                        📍 {event?.location}
-                      </p>
-
-                      <p className="text-sm">
-                        🎟 {t.ticketType} • Qty: {t.quantity}
-                      </p>
-
-                      <p className="text-xs text-gray-500">
-                        Payment: {t.paymentStatus}
-                      </p>
+              return (
+                <div key={t._id} className="relative bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-indigo-100/20 overflow-hidden flex flex-col lg:flex-row group transition-all hover:border-indigo-200">
+                  
+                  {/* TICKET IMAGE SECTION */}
+                  <div className="relative w-full lg:w-72 h-48 lg:h-auto overflow-hidden">
+                    <img
+                      src={event?.images?.[0] ? `${import.meta.env.VITE_API_URL}/${event.images[0].replace(/^\/+/, "")}` : "/no-image.png"}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      alt="Event"
+                    />
+                    <div className="absolute top-4 left-4">
+                       <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter shadow-sm ${statusColors[t.status]}`}>
+                        {t.status}
+                      </span>
                     </div>
-
-                    {/* STATUS */}
-                    <span
-                      className={`text-xs px-3 py-1 rounded-full h-fit ${
-                        t.status === "BOOKED"
-                          ? "bg-green-100 text-green-600"
-                          : t.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-600"
-                          : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {t.status}
-                    </span>
                   </div>
 
-                  {/* INPUT */}
-                  {t.status === "BOOKED" && (
-                    <input
-                      type="email"
-                      placeholder="Transfer to email"
-                      value={emails[t._id] || ""}
-                      onChange={(e) =>
-                        setEmails({ ...emails, [t._id]: e.target.value })
-                      }
-                      className="mt-3 w-full px-4 py-2 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                  )}
+                  {/* INFO SECTION */}
+                  <div className="p-8 flex-1 flex flex-col justify-between relative">
+                    {/* Visual Ticket Notch (Desktop only) */}
+                    <div className="hidden lg:block absolute left-[-12px] top-1/2 -translate-y-1/2 w-6 h-12 bg-[#f8fafc] border border-gray-100 rounded-full"></div>
 
-                  {/* ACTIONS */}
-                  {t.status === "BOOKED" && (
-                    <div className="flex gap-3 mt-3">
-                      <button
-                        onClick={() => handleCancel(t._id)}
-                        className="px-4 py-2 text-sm rounded-xl bg-red-50 text-red-600 hover:bg-red-100"
-                      >
-                        Cancel
-                      </button>
-
-                      <button
-                        onClick={() => handleTransfer(t._id)}
-                        disabled={!emails[t._id]}
-                        className={`px-4 py-2 text-sm rounded-xl ${
-                          emails[t._id]
-                            ? "bg-gray-100 hover:bg-gray-200"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        Transfer
-                      </button>
+                    <div>
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h2 className="text-2xl font-black text-gray-900 leading-tight mb-1">{event?.title || "Unknown Event"}</h2>
+                          <div className="flex items-center gap-4 text-sm text-gray-500 font-medium">
+                             <span>📅 {event?.date ? new Date(event.date).toLocaleDateString() : 'TBA'}</span>
+                             <span>📍 {event?.location || 'TBA'}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black text-gray-400 uppercase">Type</p>
+                          <p className="font-bold text-indigo-600">{t.ticketType} (x{t.quantity})</p>
+                        </div>
+                      </div>
                     </div>
-                  )}
+
+                    {t.status === "BOOKED" && (
+                      <div className="mt-6 pt-6 border-t border-dashed border-gray-100 flex flex-col md:flex-row items-end gap-4">
+                        <div className="w-full flex-1">
+                          <label className="text-[10px] font-black text-gray-400 uppercase mb-2 block ml-1">Transfer Seat</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="email"
+                              placeholder="recipient@email.com"
+                              value={emails[t._id] || ""}
+                              onChange={(e) => setEmails({ ...emails, [t._id]: e.target.value })}
+                              className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition"
+                            />
+                            <button
+                              disabled={!emails[t._id] || actionLoading === t._id}
+                              onClick={() => handleTransfer(t._id)}
+                              className="px-6 py-2.5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-600 transition disabled:opacity-30"
+                            >
+                              {actionLoading === t._id ? "..." : "Send"}
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <button
+                          disabled={actionLoading === t._id}
+                          onClick={() => handleCancel(t._id)}
+                          className="w-full md:w-auto px-6 py-2.5 bg-rose-50 text-rose-500 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition disabled:opacity-30"
+                        >
+                          Cancel Booking
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PSEUDO BARCODE AREA */}
+                  <div className="hidden xl:flex w-24 bg-gray-50 items-center justify-center border-l border-dashed border-gray-200">
+                    <div className="rotate-90 flex gap-1 opacity-20">
+                      {[...Array(12)].map((_, i) => (
+                        <div key={i} className={`h-12 ${i % 3 === 0 ? 'w-2' : 'w-1'} bg-black`}></div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </PageLayout>
   );
 };
 

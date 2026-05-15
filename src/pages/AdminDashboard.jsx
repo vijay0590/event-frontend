@@ -1,248 +1,214 @@
 import { useState, useEffect } from "react";
 import API from "../api/axios";
 import { Link } from "react-router-dom";
-import { BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
+import { BarChart, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer, CartesianGrid } from "recharts";
 import toast from "react-hot-toast";
+import PageLayout from "../components/PageLayout";
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({
-    users: 0,
-    events: 0,
-    revenue: 0,
-  });
-
+  const [stats, setStats] = useState({ users: 0, events: 0, revenue: 0 });
   const [transactions, setTransactions] = useState([]);
   const [pendingEvents, setPendingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
 
   const latestTransactions = transactions.slice(0, 5);
 
+  // ===== FETCH DATA =====
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const statsRes = await API.get("/api/admin");
+        const [statsRes, txRes, pendingRes] = await Promise.all([
+          API.get("/api/admin"),
+          API.get("/api/admin/transactions"),
+          API.get("/api/events/admin/pending")
+        ]);
+
         setStats({
-          users: statsRes.data.users,
-          events: statsRes.data.events,
-          revenue: statsRes.data.revenue,
+          users: statsRes.data?.users || 0,
+          events: statsRes.data?.events || 0,
+          revenue: statsRes.data?.revenue || 0,
         });
-
-        const txRes = await API.get("/api/admin/transactions");
-        setTransactions(txRes.data);
-
-        const pendingRes = await API.get("/api/events/admin/pending");
-        setPendingEvents(pendingRes.data.events);
-
+        setTransactions(txRes.data || []);
+        setPendingEvents(pendingRes.data.events || []);
       } catch (err) {
-        console.log(err);
-        toast.error("Failed to load admin data");
+        toast.error("Failed to sync admin records");
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // APPROVE
-  const handleApprove = async (id) => {
+  // ===== EVENT ACTIONS =====
+  const handleUpdateStatus = async (id, status) => {
+    if (actionLoading) return;
     try {
-      await API.put(`/api/events/admin/${id}/status`, {
-        status: "APPROVED",
-      });
-      toast.success("Event approved");
+      setActionLoading(id);
+      await API.put(`/api/events/admin/${id}/status`, { status });
+      toast.success(`Event ${status.toLowerCase()} successfully`);
       setPendingEvents((prev) => prev.filter((e) => e._id !== id));
+      // Refresh stats after approval
+      if(status === "APPROVED") setStats(s => ({...s, events: s.events + 1}));
     } catch {
-      toast.error("Approval failed");
+      toast.error("Action failed. Please try again.");
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  // REJECT
-  const handleReject = async (id) => {
-    try {
-      await API.put(`/api/events/admin/${id}/status`, {
-        status: "REJECTED",
-      });
-      toast.success("Event rejected");
-      setPendingEvents((prev) => prev.filter((e) => e._id !== id));
-    } catch {
-      toast.error("Rejection failed");
-    }
-  };
-
-  const data = [
-    { name: "Events", value: stats.events },
-    { name: "Users", value: stats.users },
+  const chartData = [
+    { name: "Live Events", value: stats.events },
+    { name: "Total Users", value: stats.users },
+    { name: "Pending", value: pendingEvents.length },
   ];
 
-  // LOADING UI
   if (loading) {
-    return <p className="text-center mt-10">Loading admin data...</p>;
+    return (
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center h-screen">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-500 font-medium">Securing Dashboard Access...</p>
+        </div>
+      </PageLayout>
+    );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
+    <PageLayout>
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+          <div>
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight">System Control</h1>
+            <p className="text-gray-500">Overview of platform health and ticket economy.</p>
+          </div>
+          <div className="flex gap-2">
+            <Link to="/admin-events" className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition shadow-sm">Events</Link>
+            <Link to="/admin-users" className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition shadow-sm">Users</Link>
+          </div>
+        </header>
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
-        Admin Dashboard
-      </h1>
+        {/* STATS CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-10"><svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg></div>
+             <p className="text-gray-500 font-bold uppercase text-xs tracking-widest mb-1">Platform Users</p>
+             <h2 className="text-4xl font-black text-gray-900">{stats.users.toLocaleString()}</h2>
+          </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-10"><svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" /></svg></div>
+             <p className="text-gray-500 font-bold uppercase text-xs tracking-widest mb-1">Live Events</p>
+             <h2 className="text-4xl font-black text-gray-900">{stats.events.toLocaleString()}</h2>
+          </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-          <p className="text-sm text-gray-500">Total Events</p>
-          <h2 className="text-2xl font-semibold">{stats.events}</h2>
+          <div className="bg-indigo-600 p-8 rounded-3xl shadow-xl shadow-indigo-100 relative overflow-hidden">
+             <p className="text-indigo-200 font-bold uppercase text-xs tracking-widest mb-1">Total Revenue</p>
+             <h2 className="text-4xl font-black text-white">₹{stats.revenue.toLocaleString('en-IN')}</h2>
+             <div className="mt-2 text-indigo-300 text-xs font-medium">Updated real-time from Stripe/Razorpay</div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-          <p className="text-sm text-gray-500">Total Users</p>
-          <h2 className="text-2xl font-semibold">{stats.users}</h2>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-          <p className="text-sm text-gray-500">Revenue</p>
-          <h2 className="text-2xl font-semibold text-indigo-600">
-            ₹{stats.revenue}
-          </h2>
-        </div>
-
-      </div>
-
-      {/* CHART */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm mt-8">
-        <h2 className="text-lg font-semibold mb-4">Overview</h2>
-
-        <div className="w-full overflow-x-auto">
-          <BarChart width={600} height={300} data={data}>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" />
-          </BarChart>
-        </div>
-      </div>
-
-      {/* PENDING EVENTS */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm mt-8">
-        <h2 className="text-lg font-semibold mb-4">
-          Pending Events
-        </h2>
-
-        {pendingEvents.length === 0 ? (
-          <p className="text-gray-500 text-center py-6">
-            No pending events 🎉
-          </p>
-        ) : (
-          pendingEvents.map((e) => (
-            <div key={e._id} className="bg-gray-50 p-4 rounded-xl mb-3">
-
-              <h3 className="font-semibold">{e.title}</h3>
-              <p className="text-sm text-gray-500">
-                {e.organiser?.name || "Unknown"}
-              </p>
-
-              <div className="flex gap-3 mt-3">
-
-                <button
-                  onClick={() => handleApprove(e._id)}
-                  className="px-3 py-1 rounded-lg bg-green-500 text-white hover:bg-green-600 text-sm"
-                >
-                  Approve
-                </button>
-
-                <button
-                  onClick={() => handleReject(e._id)}
-                  className="px-3 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 text-sm"
-                >
-                  Reject
-                </button>
-
-              </div>
-
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* ANALYTICS CHART */}
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <span className="w-2 h-5 bg-indigo-600 rounded-full"></span> Platform Growth
+            </h2>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <Tooltip 
+                    cursor={{fill: '#f9fafb'}}
+                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}}
+                  />
+                  <Bar dataKey="value" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          ))
-        )}
-      </div>
+          </div>
 
-      {/* ACTION BUTTONS */}
-      <div className="flex gap-3 mt-6 flex-wrap">
+          {/* PENDING APPROVALS */}
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <span className="w-2 h-5 bg-yellow-400 rounded-full"></span> Queue ({pendingEvents.length})
+            </h2>
+            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {pendingEvents.length === 0 ? (
+                <div className="text-center py-10">
+                    <p className="text-gray-400 font-medium italic underline underline-offset-4 decoration-green-300">All caught up!</p>
+                </div>
+              ) : (
+                pendingEvents.map((e) => (
+                  <div key={e._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group transition hover:bg-gray-100">
+                    <div>
+                      <h3 className="font-bold text-gray-900 group-hover:text-indigo-600 transition">{e.title}</h3>
+                      <p className="text-xs text-gray-500 font-medium">By: {e.organiser?.name || "Independent"}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleUpdateStatus(e._id, "APPROVED")}
+                        className="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-600 hover:text-white transition"
+                      >
+                        Approve
+                      </button>
+                      <button 
+                         onClick={() => handleUpdateStatus(e._id, "REJECTED")}
+                         className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition"
+                      >
+                        Deny
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
 
-        <Link
-          to="/admin-events"
-          className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition text-sm font-medium"
-        >
-          Manage Events
-        </Link>
-
-        <Link
-          to="/admin-users"
-          className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition text-sm font-medium"
-        >
-          Users
-        </Link>
-
-        <Link
-          to="/admin-transactions"
-          className="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition text-sm font-medium"
-        >
-          Transactions
-        </Link>
-
-      </div>
-
-      {/* TRANSACTIONS */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm mt-8">
-
-        <h2 className="text-lg font-semibold mb-4">
-          Recent Transactions
-        </h2>
-
-        {latestTransactions.length === 0 ? (
-          <p className="text-gray-500">No transactions</p>
-        ) : (
-          <table className="w-full text-sm border-separate border-spacing-y-2">
-
-            <thead className="text-left text-gray-500">
-              <tr>
-                <th>User</th>
-                <th>Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {latestTransactions.map((t) => (
-                <tr key={t._id} className="bg-gray-50">
-
-                  <td className="p-3 rounded-l-xl">
-                    {t.user?.name || "Unknown"}
-                  </td>
-
-                  <td className="p-3">₹{t.totalPrice}</td>
-
-                  <td className="p-3 rounded-r-xl">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        t.paymentStatus === "COMPLETED"
-                          ? "bg-green-100 text-green-600"
-                          : "bg-yellow-100 text-yellow-600"
-                      }`}
-                    >
-                      {t.paymentStatus}
-                    </span>
-                  </td>
-
+        {/* RECENT TRANSACTIONS */}
+        <div className="mt-10 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
+             <h2 className="text-xl font-bold text-gray-800">Recent Transactions</h2>
+             <Link to="/admin-transactions" className="text-indigo-600 text-sm font-bold hover:underline">View All &rarr;</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50 text-gray-400 text-[10px] uppercase tracking-widest">
+                <tr>
+                  <th className="px-8 py-4">User</th>
+                  <th className="px-8 py-4">Status</th>
+                  <th className="px-8 py-4">Amount</th>
+                  <th className="px-8 py-4 text-right">Transaction ID</th>
                 </tr>
-              ))}
-            </tbody>
-
-          </table>
-        )}
-
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {latestTransactions.map((t) => (
+                  <tr key={t._id} className="hover:bg-gray-50/50 transition">
+                    <td className="px-8 py-4">
+                        <p className="font-bold text-gray-800">{t.user?.name || "Guest"}</p>
+                        <p className="text-xs text-gray-400">{t.user?.email}</p>
+                    </td>
+                    <td className="px-8 py-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-tighter ${
+                        t.paymentStatus === "COMPLETED" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                      }`}>
+                        {t.paymentStatus || "PENDING"}
+                      </span>
+                    </td>
+                    <td className="px-8 py-4 font-mono font-bold text-gray-900">₹{t.totalPrice}</td>
+                    <td className="px-8 py-4 text-right font-mono text-xs text-gray-400">#{t._id.slice(-8)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-
-    </div>
+    </PageLayout>
   );
 };
 

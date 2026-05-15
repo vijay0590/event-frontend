@@ -8,178 +8,152 @@ const Navbar = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
+  const role = (user?.role || user?.accountType || "").toLowerCase();
+
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.clear();
     setUser(null);
     navigate("/login");
+    setOpen(false);
   };
-
-  const role = user?.role?.toLowerCase();
 
   const activeClass = (path) => {
-    if (path === "/") {
-      return location.pathname === "/"
-        ? "text-indigo-600 font-semibold"
-        : "";
-    }
-
-    return location.pathname.startsWith(path)
-      ? "text-indigo-600 font-semibold"
-      : "";
+    const isActive = path === "/" 
+      ? location.pathname === "/" 
+      : location.pathname.startsWith(path);
+    
+    return isActive 
+      ? "text-indigo-600 font-bold" 
+      : "text-gray-600 hover:text-indigo-500 transition-colors";
   };
-  // Prevent background scroll when menu open
+
+  // Auto-close mobile menu on resize or navigation
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto";
   }, [open]);
 
   return (
-    <div className="bg-white/70 backdrop-blur-md border-b border-indigo-100/60 px-6 py-3 sticky top-0 z-50">
-
-      {/* TOP NAV */}
-      <div className="flex justify-between items-center max-w-7xl mx-auto w-full">
-
-        {/* MENU BUTTON */}
-        <button
-          className="md:hidden text-2xl"
-          onClick={() => setOpen(!open)}
+    <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100] px-6 py-4">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        
+        {/* LOGO SECTION */}
+        <div 
+          onClick={() => navigate("/")} 
+          className="flex items-center gap-3 cursor-pointer group"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-
-        {/* LOGO */}
-        <div
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 cursor-pointer group"
-        >
-          <div className="p-1.5 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"
-              />
-            </svg>
+          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:rotate-12 transition-transform">
+            <span className="text-xl font-black">X</span>
           </div>
-
-          <span className="text-lg font-semibold text-gray-800 group-hover:text-indigo-600 transition">
-            EventX
+          <span className="text-xl font-black tracking-tighter text-gray-900">
+            EVENT<span className="text-indigo-600">X</span>
           </span>
         </div>
-        {/* DESKTOP MENU */}
-        <div className="hidden md:flex gap-6 items-center text-sm font-medium">
 
-          <Link
-            to="/"
-            className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/")}`}
-          >
-            Home
-          </Link>
-          {!user && (
+        {/* DESKTOP NAVIGATION */}
+        <div className="hidden md:flex items-center gap-8 text-[13px] font-black uppercase tracking-widest">
+          <Link to="/" className={activeClass("/")}>Home</Link>
+
+          {!user ? (
+            <div className="flex items-center gap-4 ml-4">
+              <Link to="/login" className="text-gray-900">Sign In</Link>
+              <Link 
+                to="/register" 
+                className="bg-gray-900 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-600 transition-all shadow-md"
+              >
+                Join Now
+              </Link>
+            </div>
+          ) : (
             <>
-              <Link to="/login" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/login")}`}>Login</Link>
-              <Link to="/register" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/register")}`}>Register</Link>
+              {role === "user" && (
+                <>
+                  <Link to="/my-tickets" className={activeClass("/my-tickets")}>Tickets</Link>
+                  <Link to="/profile" className={activeClass("/profile")}>Profile</Link>
+                </>
+              )}
+
+              {role === "organiser" && (
+                <>
+                  <Link to="/organiser-dashboard" className={activeClass("/organiser-dashboard")}>Dashboard</Link>
+                  <Link to="/create-event" className={activeClass("/create-event")}>Create</Link>
+                  <Link to="/my-events" className={activeClass("/my-events")}>My Events</Link>
+                </>
+              )}
+
+              {role === "admin" && (
+                <Link to="/admin" className={activeClass("/admin")}>Admin Panel</Link>
+              )}
+
+              <div className="h-6 w-[1px] bg-gray-200 mx-2"></div>
+
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-[10px] text-gray-400 leading-none mb-1">{role}</p>
+                  <p className="text-gray-900 normal-case tracking-normal font-bold">{user.name.split(' ')[0]}</p>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"
+                  title="Logout"
+                >
+                  <span className="text-lg">⏻</span>
+                </button>
+              </div>
             </>
           )}
+        </div>
 
-          {role === "user" && (
+        {/* MOBILE BURGER */}
+        <button 
+          className="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5"
+          onClick={() => setOpen(true)}
+        >
+          <div className="w-6 h-0.5 bg-gray-900 rounded-full"></div>
+          <div className="w-6 h-0.5 bg-indigo-600 rounded-full"></div>
+          <div className="w-4 h-0.5 bg-gray-900 rounded-full self-end"></div>
+        </button>
+      </div>
+
+      {/* MOBILE OVERLAY MENU */}
+      <div className={`fixed inset-0 bg-gray-900/95 z-[200] transition-all duration-500 md:hidden ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <button 
+          className="absolute top-8 right-8 text-white text-3xl font-light"
+          onClick={() => setOpen(false)}
+        >
+          ✕
+        </button>
+
+        <div className="flex flex-col h-full justify-center items-center gap-8 text-white text-2xl font-black uppercase tracking-tighter">
+          <Link onClick={() => setOpen(false)} to="/">Home</Link>
+          
+          {user ? (
             <>
-              <Link to="/my-tickets" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/my-tickets")}`}>My Tickets</Link>
-              <Link to="/profile" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/profile")}`}>Profile</Link>
-            </>
-          )}
-
-          {role === "organiser" && (
-            <>
-              <Link to="/organiser-dashboard" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/organiser-dashboard")}`}>Dashboard</Link>
-              <Link to="/create-event" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/create-event")}`}>Create Event</Link>
-              <Link to="/my-events" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/my-events")}`}>My Events</Link>
-            </>
-          )}
-
-          {role === "admin" && (
-            <Link to="/admin" className={`text-gray-600 hover:text-indigo-600 transition ${activeClass("/admin")}`}>Admin</Link>
-          )}
-
-          {user && (
-            <>
-              <span className="text-gray-700 font-medium">{user.name}</span>
-              <button onClick={handleLogout} className="text-sm text-red-400 hover:text-red-500 transition">
-                Logout
+              {role === "user" && <Link to="/my-tickets">My Tickets</Link>}
+              {role === "organiser" && <Link to="/organiser-dashboard">Dashboard</Link>}
+              {role === "admin" && <Link to="/admin">Admin</Link>}
+              
+              <Link to="/profile" className="text-indigo-400">Profile Settings</Link>
+              
+              <button 
+                onClick={handleLogout}
+                className="mt-10 px-8 py-3 bg-rose-600 rounded-2xl text-sm"
+              >
+                Sign Out
               </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login">Sign In</Link>
+              <Link to="/register" className="text-indigo-400">Join EventX</Link>
             </>
           )}
         </div>
       </div>
-
-      {/* MOBILE MENU */}
-      {open && (
-        <>
-          {/* OVERLAY */}
-          <div
-            className="fixed inset-0 bg-black/40 z-40 md:hidden"
-            onClick={() => setOpen(false)}
-          ></div>
-
-          {/* MENU */}
-          <div className="fixed top-0 left-0 w-full h-screen bg-white z-50 flex flex-col items-center justify-center gap-6 text-lg md:hidden">
-
-            {/* CLOSE BUTTON */}
-            <button
-              className="absolute top-4 right-6 text-2xl"
-              onClick={() => setOpen(false)}
-            >
-              ✕
-            </button>
-
-            <Link to="/" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/")}`}>Home</Link>
-
-            {!user && (
-              <>
-                <Link to="/login" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/login")}`}>Login</Link>
-                <Link to="/register" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/register")}`}>Register</Link>
-              </>
-            )}
-
-            {role === "user" && (
-              <>
-                <Link to="/my-tickets" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/my-tickets")}`}>My Tickets</Link>
-                <Link to="/profile" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/profile")}`}>Profile</Link>
-              </>
-            )}
-
-            {role === "organiser" && (
-              <>
-                <Link to="/organiser-dashboard" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/organiser-dashboard")}`}>Dashboard</Link>
-                <Link to="/create-event" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/create-event")}`}>Create Event</Link>
-                <Link to="/my-events" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/my-events")}`}>My Events</Link>
-              </>
-            )}
-
-            {role === "admin" && (
-              <Link to="/admin" onClick={() => setOpen(false)} className={`text-gray-600 hover:text-indigo-600 ${activeClass("/admin")}`}>Admin</Link>
-            )}
-
-            {user && (
-              <div className="flex flex-col items-center gap-2 mt-4">
-                <span className="text-gray-800 font-semibold">{user.name}</span>
-
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setOpen(false);
-                  }}
-                  className="px-4 py-1.5 text-sm text-white bg-red-500 rounded-md hover:bg-red-600 transition"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-
-          </div>
-        </>
-      )}
-    </div>
+    </nav>
   );
 };
 

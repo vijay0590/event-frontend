@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import API from "../api/axios";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import BackButton from "../components/BackButton";
+import PageLayout from "../components/PageLayout";
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none";
+  "w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all duration-200";
 
 const EditEvent = () => {
   const { id } = useParams();
@@ -20,74 +20,53 @@ const EditEvent = () => {
     category: "",
   });
 
-  const [schedule, setSchedule] = useState([
-    { title: "", speaker: "", startTime: "", endTime: "" },
-  ]);
-
-  const [ticketTypes, setTicketTypes] = useState([
-    { type: "", price: "", total: 0, available: 0 },
-  ]);
-
+  const [ticketTypes, setTicketTypes] = useState([]);
   const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null); // Local preview of new upload
+  const [currentImage, setCurrentImage] = useState(null); // Existing image from DB
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // ===== FETCH EVENT =====
+  // FETCH DATA
   useEffect(() => {
     const fetchEvent = async () => {
       try {
         const res = await API.get(`/api/events/${id}`);
-        const e = res?.data?.event || res?.data;
+        const e = res.data?.event || res.data;
 
         setForm({
-          title: e?.title || "",
-          description: e?.description || "",
-          location: e?.location || "",
-          date: e?.date ? e.date.split("T")[0] : "",
-          time: e?.time || "",
-          category: e?.category || "",
+          title: e.title || "",
+          description: e.description || "",
+          location: e.location || "",
+          date: e.date ? new Date(e.date).toISOString().split("T")[0] : "",
+          time: e.time || "",
+          category: e.category || "",
         });
 
-        setSchedule(
-          e?.schedule?.length
-            ? e.schedule
-            : [{ title: "", speaker: "", startTime: "", endTime: "" }]
-        );
-
-        setTicketTypes(
-          e?.ticketTypes?.length
-            ? e.ticketTypes
-            : [{ type: "", price: "", total: 0, available: 0 }]
-        );
-
-      } catch {
-        toast.error("Failed to load event");
+        setTicketTypes(e.ticketTypes || []);
+        setCurrentImage(e.image); // Save existing image path
+      } catch (err) {
+        toast.error("Failed to load event data");
+        navigate(-1);
       } finally {
         setLoading(false);
       }
     };
-
     fetchEvent();
-  }, [id]);
+  }, [id, navigate]);
 
-  // ===== HANDLERS =====
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  // IMAGE PREVIEW LOGIC
+  useEffect(() => {
+    if (!image) {
+      setPreview(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(image);
+    setPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [image]);
 
-  const handleScheduleChange = (i, field, value) => {
-    const updated = [...schedule];
-    updated[i][field] = value;
-    setSchedule(updated);
-  };
-
-  const addSchedule = () => {
-    setSchedule([...schedule, { title: "", speaker: "", startTime: "", endTime: "" }]);
-  };
-
-  const removeSchedule = (i) => {
-    setSchedule(schedule.filter((_, index) => index !== i));
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleTicketChange = (i, field, value) => {
     const updated = [...ticketTypes];
@@ -95,35 +74,20 @@ const EditEvent = () => {
     setTicketTypes(updated);
   };
 
-  const addTicket = () => {
-    setTicketTypes([...ticketTypes, { type: "", price: "", total: 0, available: 0 }]);
-  };
-
-  const removeTicket = (i) => {
-    setTicketTypes(ticketTypes.filter((_, index) => index !== i));
-  };
-
-  // ===== SUBMIT =====
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
 
     try {
       setSaving(true);
-
       const data = new FormData();
       Object.keys(form).forEach((key) => data.append(key, form[key]));
-
-      data.append("schedule", JSON.stringify(schedule));
       data.append("ticketTypes", JSON.stringify(ticketTypes));
       if (image) data.append("image", image);
 
-      await API.put(`/api/events/${id}`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      toast.success("Event updated!");
-      navigate("/my-events");
-
+      await API.put(`/api/events/${id}`, data);
+      toast.success("Changes saved! ✨");
+      navigate(-1);
     } catch (err) {
       toast.error(err.response?.data?.message || "Update failed");
     } finally {
@@ -131,123 +95,107 @@ const EditEvent = () => {
     }
   };
 
-  if (loading) {
-    return <p className="text-center mt-10">Loading...</p>;
-  }
+  if (loading) return (
+    <PageLayout showBack={false}>
+      <div className="flex flex-col justify-center items-center h-[60vh]">
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    </PageLayout>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <BackButton />
+    <PageLayout>
+      <div className="max-w-4xl mx-auto pb-20">
+        <header className="mb-10">
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Edit Experience</h1>
+          <p className="text-gray-500 text-lg mt-1">Refine the details for {form.title}</p>
+        </header>
 
-      <h1 className="text-3xl font-bold text-center mb-10">
-        Edit Event
-      </h1>
-
-      <form onSubmit={handleSubmit} className="space-y-8">
-
-        {/* BASIC */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-semibold">Basic Details</h2>
-
-          <input name="title" value={form.title} onChange={handleChange} placeholder="Event Title" className={inputClass} />
-          <input name="location" value={form.location} onChange={handleChange} placeholder="Location" className={inputClass} />
-
-          <div className="grid grid-cols-2 gap-4">
-            <input type="date" name="date" value={form.date} onChange={handleChange} className={inputClass} />
-            <input name="time" value={form.time} onChange={handleChange} placeholder="Time" className={inputClass} />
-          </div>
-
-          <input name="category" value={form.category} onChange={handleChange} placeholder="Category" className={inputClass} />
-          <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className={`${inputClass} h-24`} />
-        </div>
-
-        {/* SCHEDULE */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-semibold">Schedule</h2>
-
-          {schedule.map((s, i) => (
-            <div key={i} className="space-y-3">
-              <input placeholder="Session Title" value={s.title} onChange={(e) => handleScheduleChange(i, "title", e.target.value)} className={inputClass} />
-              <input placeholder="Speaker" value={s.speaker} onChange={(e) => handleScheduleChange(i, "speaker", e.target.value)} className={inputClass} />
-
-              <div className="grid grid-cols-2 gap-4">
-                <input placeholder="Start Time" value={s.startTime} onChange={(e) => handleScheduleChange(i, "startTime", e.target.value)} className={inputClass} />
-                <input placeholder="End Time" value={s.endTime} onChange={(e) => handleScheduleChange(i, "endTime", e.target.value)} className={inputClass} />
+        <form onSubmit={handleSubmit} className="space-y-10">
+          {/* 1. BASIC DETAILS */}
+          <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <span className="w-2 h-6 bg-indigo-600 rounded-full"></span>
+              Basic Info
+            </h2>
+            <div className="space-y-4">
+              <input name="title" value={form.title} onChange={handleChange} className={inputClass} placeholder="Event Title" />
+              <input name="location" value={form.location} onChange={handleChange} className={inputClass} placeholder="Location" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="date" name="date" value={form.date} onChange={handleChange} className={inputClass} />
+                <input name="time" value={form.time} onChange={handleChange} className={inputClass} placeholder="Time" />
               </div>
+              <textarea name="description" value={form.description} onChange={handleChange} className={`${inputClass} h-32 resize-none`} placeholder="Description" />
+            </div>
+          </section>
 
-              <button type="button" onClick={() => removeSchedule(i)} className="text-red-500 text-sm">
-                Remove
+          {/* 2. TICKETS */}
+          <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
+                Ticket Tiers
+              </h2>
+              <button 
+                type="button" 
+                onClick={() => setTicketTypes([...ticketTypes, { type: "", price: 0, total: 0 }])}
+                className="text-indigo-600 text-sm font-bold hover:underline"
+              >
+                + ADD TIER
               </button>
             </div>
-          ))}
+            
+            <div className="space-y-3">
+              {ticketTypes.map((t, i) => (
+                <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input placeholder="Type" value={t.type} onChange={(e) => handleTicketChange(i, "type", e.target.value)} className={inputClass} />
+                    <input type="number" placeholder="Price" value={t.price} onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))} className={inputClass} />
+                    <div className="flex gap-2">
+                      <input type="number" placeholder="Total" value={t.total} onChange={(e) => handleTicketChange(i, "total", Number(e.target.value))} className={inputClass} />
+                      <button type="button" onClick={() => setTicketTypes(ticketTypes.filter((_, idx) => idx !== i))} className="text-rose-500 px-2 hover:bg-rose-50 rounded-lg">✕</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
-          <button type="button" onClick={addSchedule} className="text-indigo-600 text-sm font-medium">
-            + Add Schedule
-          </button>
-        </div>
-
-        {/* TICKETS */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-          <h2 className="text-lg font-semibold">Tickets</h2>
-
-          {ticketTypes.map((t, i) => (
-            <div key={i} className="space-y-3">
-
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  placeholder="Ticket Type (VIP / General)"
-                  value={t.type}
-                  onChange={(e) => handleTicketChange(i, "type", e.target.value)}
-                  className={inputClass}
-                />
-
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Price (₹)"
-                  value={t.price}
-                  onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))}
-                  className={inputClass}
-                />
+          {/* 3. IMAGE */}
+          <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
+              Event Banner
+            </h2>
+            <div className="flex flex-col items-center p-8 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50">
+              <input type="file" id="edit-img" className="hidden" accept="image/*" onChange={(e) => setImage(e.target.files[0])} />
+              
+              <div className="mb-4 relative">
+                {preview ? (
+                  <img src={preview} className="h-48 w-80 object-cover rounded-2xl shadow-xl border-4 border-white" alt="New" />
+                ) : currentImage ? (
+                  <img src={currentImage} className="h-48 w-80 object-cover rounded-2xl shadow-md border-4 border-white" alt="Current" />
+                ) : (
+                  <div className="h-48 w-80 bg-gray-200 rounded-2xl flex items-center justify-center text-gray-400">No Image</div>
+                )}
               </div>
 
-              <input
-                type="number"
-                min="0"
-                placeholder="Total Tickets Available"
-                value={t.total}
-                onChange={(e) => handleTicketChange(i, "total", Number(e.target.value))}
-                className={inputClass}
-              />
-
-              <p className="text-sm text-gray-500">
-                Remaining: {t.available ?? t.total ?? 0}
-              </p>
-
-              <button type="button" onClick={() => removeTicket(i)} className="text-red-500 text-sm">
-                Remove
-              </button>
+              <label htmlFor="edit-img" className="cursor-pointer bg-white px-6 py-2 rounded-xl border shadow-sm font-bold text-gray-700 hover:bg-gray-50 transition">
+                Replace Banner
+              </label>
             </div>
-          ))}
+          </section>
 
-          <button type="button" onClick={addTicket} className="text-indigo-600 text-sm font-medium">
-            + Add Ticket
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-gray-900 text-white py-5 rounded-2xl text-xl font-black shadow-xl hover:bg-indigo-600 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50"
+          >
+            {saving ? "SAVING CHANGES..." : "UPDATE EVENT"}
           </button>
-        </div>
-
-        {/* IMAGE */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-2">Event Image</h2>
-          <input type="file" onChange={(e) => setImage(e.target.files[0])} />
-        </div>
-
-        {/* SUBMIT */}
-        <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition">
-          {saving ? "Updating..." : "Update Event"}
-        </button>
-
-      </form>
-    </div>
+        </form>
+      </div>
+    </PageLayout>
   );
 };
 

@@ -1,105 +1,156 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import API from "../api/axios";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
+
 const Register = () => {
-    const [form, setForm] = useState({ name: "", email: "", password: "" });
-    const [error, setError] = useState("");
-    const { setUser } = useContext(AuthContext);
-    const navigate = useNavigate();
-    const handleChange = ((e) => {
-        setForm({ ...form, [e.target.name]: e.target.value })
-    });
-    const [loading, setLoading] = useState(false)
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const res = await API.post("/api/auth/register", form)
-            //store token
-            localStorage.setItem("token", res.data.token)
-            //set user
-            setUser(res.data.user);
-            toast.success("Registration successful")
-            //redirect
-            navigate("/");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  });
 
+  const { setUser } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Register failed")
-        } finally {
-            setLoading(false)
-        }
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+
+    // VALIDATION
+    if (!form.name || !form.email || !form.password) {
+      return toast.error("Please fill in all fields");
     }
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    if (!form.email.includes("@")) {
+      return toast.error("Please provide a valid email address");
+    }
 
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 w-full max-w-sm">
+    if (form.password.length < 6) {
+      return toast.error("Password is too short (min 6 characters)");
+    }
 
-                {/* TITLE */}
-                <h2 className="text-2xl font-semibold text-gray-900 text-center mb-1">
-                    Create Account
-                </h2>
+    if (form.password !== form.confirmPassword) {
+      return toast.error("Passwords do not match");
+    }
 
-                <p className="text-sm text-gray-500 text-center mb-6">
-                    Join EventX and start exploring
-                </p>
+    try {
+      setLoading(true);
+      const res = await API.post("/api/auth/register", {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+      });
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data.user);
 
-                    {error && (
-                        <p className="text-sm text-red-500 text-center">
-                            {error}
-                        </p>
-                    )}
+      toast.success("Welcome to EventX!");
+      navigate("/");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Name"
-                        onChange={handleChange}
-                        className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        onChange={handleChange}
-                        className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        onChange={handleChange}
-                        className="border border-gray-200 px-4 py-2 rounded-lg w-full focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-
-                    <button
-                        disabled={loading}
-                        className="bg-indigo-600 text-white py-2 w-full rounded-lg hover:bg-indigo-700 transition"
-                    >
-                        {loading ? "Registering..." : "Register"}
-                    </button>
-
-                </form>
-
-                {/* LOGIN LINK */}
-                <p className="text-sm text-center text-gray-500 mt-4">
-                    Already have an account?{" "}
-                    <a href="/login" className="text-indigo-600 hover:underline">
-                        Login
-                    </a>
-                </p>
-
-            </div>
-
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] px-4 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px]">
+      
+      <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-indigo-100/50 p-8 w-full max-w-md">
+        
+        {/* HEADER */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Create Account</h2>
+          <p className="text-gray-400 font-medium mt-1">Join the community & start booking</p>
         </div>
-    );
-}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* NAME */}
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5 ml-1">Full Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="John Doe"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
+            />
+          </div>
+
+          {/* EMAIL */}
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5 ml-1">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="john@example.com"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5 ml-1">Password</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="••••••"
+                value={form.password}
+                onChange={handleChange}
+                className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5 ml-1">Confirm</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="••••••"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-medium"
+              />
+            </div>
+          </div>
+
+          {/* SUBMIT BUTTON */}
+          <button
+            disabled={loading}
+            className="w-full mt-2 bg-indigo-600 text-white font-bold py-4 rounded-2xl hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : "Create Account"}
+          </button>
+
+        </form>
+
+        {/* FOOTER */}
+        <div className="mt-8 pt-6 border-t border-gray-50 text-center">
+          <p className="text-sm text-gray-500 font-medium">
+            Already part of EventX?{" "}
+            <Link to="/login" className="text-indigo-600 font-black hover:underline underline-offset-4">
+              Log in here
+            </Link>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 export default Register;
