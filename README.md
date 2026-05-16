@@ -6,8 +6,8 @@ A high-performance, full-stack Event Management application built using the MERN
 
 ## 🚀 Live Links
 
-*   **Frontend:** [https://creative-zuccutto-44127f.netlify.app/](https://creative-zuccutto-44127f.netlify.app/)
-*   **Backend API:** [https://online-6fl3.onrender.com](https://online-6fl3.onrender.com)
+*   **Frontend:** https://eventx-app.netlify.app/
+*   **Backend API:** https://online-6fl3.onrender.com
 
 ---
 
