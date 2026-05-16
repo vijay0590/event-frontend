@@ -6,7 +6,7 @@ import PageLayout from "../components/PageLayout";
 
 const Organiser = () => {
   const [stats, setStats] = useState({
-    events: 0,
+    totalEventsCount: 0, // renamed to track total count from backend
     tickets: 0,
     revenue: 0,
   });
@@ -20,11 +20,11 @@ const Organiser = () => {
       try {
         const [statsRes, eventsRes] = await Promise.all([
           API.get("/api/analytics/overall"),
-          await API.get("/api/events/me?limit=5"), // Bumped to 5 for a fuller list
+          API.get("/api/events/me?limit=5"), 
         ]);
 
         setStats({
-          events: statsRes.data?.totalEvents || 0,
+          totalEventsCount: statsRes.data?.totalEvents || 0,
           tickets: statsRes.data?.totalTickets || 0,
           revenue: statsRes.data?.totalRevenue || 0,
         });
@@ -49,6 +49,17 @@ const Organiser = () => {
     );
   }
 
+  // ==========================================
+  // FIX: Calculate Active vs Total Events
+  // ==========================================
+  const currentDate = new Date();
+  
+  // Filter active events where the event date is in the future or happening today
+  const activeEventsCount = recentEvents.filter(e => {
+    if (!e.date) return true; // Default to active if date is TBA
+    return new Date(e.date) >= currentDate;
+  }).length;
+
   return (
     <PageLayout>
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -70,7 +81,8 @@ const Organiser = () => {
         {/* STATS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {[
-            { label: "Active Events", val: stats.events, icon: "📅", color: "from-blue-50 to-indigo-50 text-indigo-700" },
+            // Updated to display calculated active events count instead of total count
+            { label: "Active Events", val: activeEventsCount, icon: "📅", color: "from-blue-50 to-indigo-50 text-indigo-700" },
             { label: "Tickets Sold", val: stats.tickets, icon: "🎟️", color: "from-emerald-50 to-teal-50 text-emerald-700" },
             { label: "Net Revenue", val: `₹${Number(stats.revenue).toLocaleString("en-IN")}`, icon: "💰", color: "from-orange-50 to-amber-50 text-orange-700" }
           ].map((item, i) => (

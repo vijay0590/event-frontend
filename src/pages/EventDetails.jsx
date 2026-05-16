@@ -14,26 +14,31 @@ const EventDetails = () => {
   const [selectedType, setSelectedType] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState(false); // Added error catch state
+  const [fetchError, setFetchError] = useState(false);
 
   const role = (user?.role || "").toLowerCase();
   const isUser = role === "user";
 
   useEffect(() => {
+    let isMounted = true;
     const fetchEvent = async () => {
       try {
         setFetchError(false);
         const res = await API.get(`/api/events/${id}`);
-        setEvent(res.data.event || res.data);
+        if (isMounted) {
+          setEvent(res.data.event || res.data);
+        }
       } catch (error) {
-        setFetchError(true);
-        toast.error("Failed to load event details");
+        if (isMounted) {
+          setFetchError(true);
+          toast.error("Failed to load event details");
+        }
       }
     };
     fetchEvent();
+    return () => { isMounted = false; };
   }, [id]);
 
-  // Handle Error State Fallback
   if (fetchError) {
     return (
       <PageLayout>
@@ -80,8 +85,13 @@ const EventDetails = () => {
     setLoading(true);
 
     try {
-      // 1. Create Order FIRST (No ticket is created yet)
-      const orderRes = await API.post("/api/payment/create-order", { amount: totalAmount || 1 });
+      // 1. Create Gateway Order
+      const orderRes = await API.post("/api/payment/create-order", { 
+        amount: totalAmount || 1,
+        eventId: event._id,
+        quantity,
+        ticketType: selectedType
+      });
       const order = orderRes.data;
 
       const options = {
@@ -92,31 +102,24 @@ const EventDetails = () => {
         description: `${selectedType} Ticket x ${quantity}`,
         order_id: order.id,
         handler: async (response) => {
-          const verifyToast = toast.loading("Confirming booking...");
+          const verifyToast = toast.loading("Verifying transaction and booking ticket...");
           try {
-            // 2. CREATE TICKET AND VERIFY ON SUCCESSFUL CALLBACK
-            // The ticket collection is only created in the database now that money has changed hands
-            const ticketRes = await API.post("/api/tickets", { 
-              eventId: event._id, 
-              quantity, 
-              ticketType: selectedType, 
-              paymentMethod: "razorpay" 
-            });
-
-            const ticketId = ticketRes.data.ticket._id;
-
-            // 3. COMBINED VERIFICATION
+            // 2. ATOMIC TRANSACTION VERIFICATION
+            // Ticket is generated and seat availability decremented securely server-side inside verify route
             await API.post("/api/payment/verify", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              ticketId 
+              eventId: event._id,
+              quantity,
+              ticketType: selectedType,
+              paymentMethod: "razorpay"
             });
 
             toast.success("Success! Redirecting...", { id: verifyToast });
             navigate("/my-tickets", { replace: true });
           } catch (err) {
-            toast.error("Verification failed. Please check My Tickets.", { id: verifyToast });
+            toast.error(err.response?.data?.message || "Verification failed. Check My Bookings profile.", { id: verifyToast });
             setLoading(false);
           }
         },
