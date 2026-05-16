@@ -72,6 +72,9 @@ const EventDetails = () => {
   const maxAvailable = selectedTicket?.available ?? 1;
   const totalAmount = (selectedTicket?.price || 0) * quantity;
 
+  // ==========================================
+  // UPDATED WORKFLOW FUNCTION (FIXED)
+  // ==========================================
   const handlePayment = async () => {
     if (loading) return;
     if (!isUser) return toast.error("Only users can book tickets");
@@ -85,7 +88,17 @@ const EventDetails = () => {
     setLoading(true);
 
     try {
-      // 1. Create Gateway Order
+      // 1. INITIALIZE RESERVATION TICKET ENTRY IN BACKEND (PENDING)
+      const ticketInitRes = await API.post("/api/tickets/book", { 
+        eventId: event._id,
+        quantity,
+        ticketType: selectedType,
+        paymentMethod: "razorpay"
+      });
+      
+      const createdTicket = ticketInitRes.data.ticket;
+
+      // 2. CREATE RAZORPAY GATEWAY ORDER
       const orderRes = await API.post("/api/payment/create-order", { 
         amount: totalAmount || 1,
         eventId: event._id,
@@ -104,16 +117,12 @@ const EventDetails = () => {
         handler: async (response) => {
           const verifyToast = toast.loading("Verifying transaction and booking ticket...");
           try {
-            // 2. ATOMIC TRANSACTION VERIFICATION
-            // Ticket is generated and seat availability decremented securely server-side inside verify route
-            await API.post("/api/payment/verify", {
+            // 3. ATOMIC TRANSACTION VERIFICATION WITH THE CORRECT ID
+            await API.post("/api/tickets/verify", {
+              ticketId: createdTicket._id, // Send the valid database track ID
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              eventId: event._id,
-              quantity,
-              ticketType: selectedType,
-              paymentMethod: "razorpay"
+              razorpay_signature: response.razorpay_signature
             });
 
             toast.success("Success! Redirecting...", { id: verifyToast });
