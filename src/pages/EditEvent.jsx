@@ -20,6 +20,10 @@ const EditEvent = () => {
     category: "",
   });
 
+  const [schedule, setSchedule] = useState([
+    { title: "", speaker: "", startTime: "", endTime: "" },
+  ]);
+
   const [ticketTypes, setTicketTypes] = useState([]);
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null); // Local preview of new upload
@@ -43,9 +47,14 @@ const EditEvent = () => {
           category: e.category || "",
         });
 
+        // Hydrate schedule array safely
+        if (e.schedule && e.schedule.length > 0) {
+          setSchedule(e.schedule);
+        } else {
+          setSchedule([{ title: "", speaker: "", startTime: "", endTime: "" }]);
+        }
+
         setTicketTypes(e.ticketTypes || []);
-        
-        // SAFE ARRAY REFERENCE AND CHECK
         setCurrentImage(e.images?.[0] || "");
       } catch (err) {
         toast.error("Failed to load event data");
@@ -70,6 +79,12 @@ const EditEvent = () => {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const handleScheduleChange = (i, field, value) => {
+    const updated = [...schedule];
+    updated[i][field] = value;
+    setSchedule(updated);
+  };
+
   const handleTicketChange = (i, field, value) => {
     const updated = [...ticketTypes];
     updated[i][field] = value;
@@ -84,11 +99,20 @@ const EditEvent = () => {
       setSaving(true);
       const data = new FormData();
       
+      // Auto-rebalance and transform values to keep integrity constraints
+      const parsedTicketTypes = ticketTypes.map((ticket) => ({
+        type: ticket.type.toLowerCase(),
+        price: Number(ticket.price) || 0,
+        total: Number(ticket.total) || 0,
+        available: ticket.available !== undefined ? Number(ticket.available) : Number(ticket.total) || 0,
+      }));
+
       // Append core structural elements
       Object.keys(form).forEach((key) => data.append(key, form[key]));
-      data.append("ticketTypes", JSON.stringify(ticketTypes));
+      data.append("schedule", JSON.stringify(schedule));
+      data.append("ticketTypes", JSON.stringify(parsedTicketTypes));
       
-      // LOGIC: Maintain continuity or apply new image update
+      // Maintain continuation or apply replacement image pointer
       if (image) {
         data.append("image", image);
       } else {
@@ -131,9 +155,17 @@ const EditEvent = () => {
             <div className="space-y-4">
               <input name="title" value={form.title} onChange={handleChange} className={inputClass} placeholder="Event Title" />
               <input name="location" value={form.location} onChange={handleChange} className={inputClass} placeholder="Location" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input type="date" name="date" value={form.date} onChange={handleChange} className={inputClass} />
                 <input name="time" value={form.time} onChange={handleChange} className={inputClass} placeholder="Time" />
+                <select name="category" value={form.category} onChange={handleChange} className={inputClass}>
+                  <option value="">Category</option>
+                  <option value="music">Music</option>
+                  <option value="tech">Tech</option>
+                  <option value="sports">Sports</option>
+                  <option value="entertainment">Entertainment</option>
+                  <option value="Health">Health</option>
+                </select>
               </div>
               <textarea name="description" value={form.description} onChange={handleChange} className={`${inputClass} h-32 resize-none`} placeholder="Description" />
             </div>
@@ -148,7 +180,7 @@ const EditEvent = () => {
               </h2>
               <button 
                 type="button" 
-                onClick={() => setTicketTypes([...ticketTypes, { type: "", price: 0, total: 0 }])}
+                onClick={() => setTicketTypes([...ticketTypes, { type: "general", price: 0, total: 100 }])}
                 className="text-indigo-600 text-sm font-bold hover:underline"
               >
                 + ADD TIER
@@ -159,11 +191,16 @@ const EditEvent = () => {
               {ticketTypes.map((t, i) => (
                 <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input placeholder="Type" value={t.type} onChange={(e) => handleTicketChange(i, "type", e.target.value)} className={inputClass} />
-                    <input type="number" placeholder="Price" value={t.price} onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))} className={inputClass} />
+                    <select value={t.type} onChange={(e) => handleTicketChange(i, "type", e.target.value)} className={inputClass}>
+                      <option value="general">General</option>
+                      <option value="vip">VIP</option>
+                    </select>
+                    <input type="number" placeholder="Price (₹)" value={t.price} onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))} className={inputClass} />
                     <div className="flex gap-2">
-                      <input type="number" placeholder="Total" value={t.total} onChange={(e) => handleTicketChange(i, "total", Number(e.target.value))} className={inputClass} />
-                      <button type="button" onClick={() => setTicketTypes(ticketTypes.filter((_, idx) => idx !== i))} className="text-rose-500 px-2 hover:bg-rose-50 rounded-lg">✕</button>
+                      <input type="number" placeholder="Qty" value={t.total} onChange={(e) => handleTicketChange(i, "total", Number(e.target.value))} className={inputClass} />
+                      {ticketTypes.length > 1 && (
+                        <button type="button" onClick={() => setTicketTypes(ticketTypes.filter((_, idx) => idx !== i))} className="text-rose-500 px-2 hover:bg-rose-50 rounded-lg">✕</button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -171,7 +208,40 @@ const EditEvent = () => {
             </div>
           </section>
 
-          {/* 3. IMAGE */}
+          {/* 3. SCHEDULE */}
+          <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <span className="w-2 h-6 bg-purple-500 rounded-full"></span>
+                Event Schedule
+              </h2>
+              <button 
+                type="button" 
+                onClick={() => setSchedule([...schedule, { title: "", speaker: "", startTime: "", endTime: "" }])}
+                className="text-indigo-600 text-sm font-bold hover:underline"
+              >
+                + ADD LINE
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {schedule.map((s, i) => (
+                <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-2xl relative">
+                  <input placeholder="Session Title" value={s.title} onChange={(e) => handleScheduleChange(i, "title", e.target.value)} className={inputClass} />
+                  <input placeholder="Speaker / Guest" value={s.speaker} onChange={(e) => handleScheduleChange(i, "speaker", e.target.value)} className={inputClass} />
+                  <input type="time" placeholder="Start Time" value={s.startTime} onChange={(e) => handleScheduleChange(i, "startTime", e.target.value)} className={inputClass} />
+                  <div className="flex gap-2">
+                    <input type="time" placeholder="End Time" value={s.endTime} onChange={(e) => handleScheduleChange(i, "endTime", e.target.value)} className={inputClass} />
+                    {schedule.length > 1 && (
+                      <button type="button" onClick={() => setSchedule(schedule.filter((_, idx) => idx !== i))} className="w-12 text-rose-500 hover:bg-rose-50 rounded-xl">✕</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* 4. IMAGE */}
           <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
               <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
@@ -182,12 +252,12 @@ const EditEvent = () => {
               
               <div className="mb-4 relative">
                 {preview ? (
-                  <img src={preview} className="h-48 w-80 object-cover rounded-2xl shadow-xl border-4 border-white" alt="New" />
+                  <img src={preview} className="h-48 w-80 object-cover rounded-2xl shadow-xl border-4 border-white" alt="New Preview" />
                 ) : currentImage ? (
                   <img 
                     src={`${import.meta.env.VITE_API_URL}/${currentImage.replace(/^\/+/, "")}`} 
                     className="h-48 w-80 object-cover rounded-2xl shadow-md border-4 border-white" 
-                    alt="Current" 
+                    alt="Current Database Banner" 
                   />
                 ) : (
                   <div className="h-48 w-80 bg-gray-200 rounded-2xl flex items-center justify-center text-gray-400">No Image</div>

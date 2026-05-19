@@ -27,7 +27,7 @@ const CreateEvent = () => {
   ]);
 
   const [ticketTypes, setTicketTypes] = useState([
-    { type: "General", price: 0, total: 100 },
+    { type: "general", price: 0, total: 100 },
   ]);
 
   // Clean up image preview URL to prevent memory leaks
@@ -68,9 +68,17 @@ const CreateEvent = () => {
       setLoading(true);
       const data = new FormData();
       
+      // Sync available seats explicitly with total count on configuration setup
+      const parsedTicketTypes = ticketTypes.map((ticket) => ({
+        type: ticket.type.toLowerCase(),
+        price: Number(ticket.price) || 0,
+        total: Number(ticket.total) || 0,
+        available: Number(ticket.total) || 0, // Critical backend sync metric
+      }));
+
       Object.keys(form).forEach((key) => data.append(key, form[key]));
       data.append("schedule", JSON.stringify(schedule));
-      data.append("ticketTypes", JSON.stringify(ticketTypes));
+      data.append("ticketTypes", JSON.stringify(parsedTicketTypes));
       data.append("image", image);
 
       await API.post("/api/events", data);
@@ -127,13 +135,16 @@ const CreateEvent = () => {
                 <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">2</span>
                 <h2 className="text-xl font-bold">Tickets</h2>
               </div>
-              <button type="button" onClick={() => setTicketTypes([...ticketTypes, { type: "", price: 0, total: 0 }])} className="text-indigo-600 text-sm font-bold">+ ADD TIER</button>
+              <button type="button" onClick={() => setTicketTypes([...ticketTypes, { type: "", price: 0, total: 100 }])} className="text-indigo-600 text-sm font-bold">+ ADD TIER</button>
             </div>
 
             <div className="space-y-3">
               {ticketTypes.map((t, i) => (
                 <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-2xl relative animate-in fade-in zoom-in-95 duration-300">
-                  <input placeholder="Tier (e.g. Early Bird)" value={t.type} onChange={(e) => handleTicketChange(i, "type", e.target.value)} className={inputClass} />
+                  <select value={t.type} onChange={(e) => handleTicketChange(i, "type", e.target.value)} className={inputClass}>
+                    <option value="general">General</option>
+                    <option value="vip">VIP</option>
+                  </select>
                   <input type="number" placeholder="Price (₹)" value={t.price || ""} onChange={(e) => handleTicketChange(i, "price", Number(e.target.value))} className={inputClass} />
                   <div className="flex gap-2">
                      <input type="number" placeholder="Qty" value={t.total || ""} onChange={(e) => handleTicketChange(i, "total", Number(e.target.value))} className={inputClass} />
@@ -146,10 +157,37 @@ const CreateEvent = () => {
             </div>
           </section>
 
-          {/* 3. BANNER */}
+          {/* 3. SCHEDULE */}
+          <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">3</span>
+                <h2 className="text-xl font-bold">Event Schedule / Timeline</h2>
+              </div>
+              <button type="button" onClick={() => setSchedule([...schedule, { title: "", speaker: "", startTime: "", endTime: "" }])} className="text-indigo-600 text-sm font-bold">+ ADD LINE</button>
+            </div>
+
+            <div className="space-y-3">
+              {schedule.map((s, i) => (
+                <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-2xl relative">
+                  <input placeholder="Session Title" value={s.title} onChange={(e) => handleScheduleChange(i, "title", e.target.value)} className={inputClass} />
+                  <input placeholder="Speaker / Guest" value={s.speaker} onChange={(e) => handleScheduleChange(i, "speaker", e.target.value)} className={inputClass} />
+                  <input type="time" placeholder="Start Time" value={s.startTime} onChange={(e) => handleScheduleChange(i, "startTime", e.target.value)} className={inputClass} />
+                  <div className="flex gap-2">
+                    <input type="time" placeholder="End Time" value={s.endTime} onChange={(e) => handleScheduleChange(i, "endTime", e.target.value)} className={inputClass} />
+                    {schedule.length > 1 && (
+                      <button type="button" onClick={() => setSchedule(schedule.filter((_, idx) => idx !== i))} className="w-12 text-rose-500 hover:bg-rose-50 rounded-xl">✕</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* 4. BANNER */}
           <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
             <div className="flex items-center gap-3 mb-6">
-              <span className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold">3</span>
+              <span className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold">4</span>
               <h2 className="text-xl font-bold">Banner Image</h2>
             </div>
 

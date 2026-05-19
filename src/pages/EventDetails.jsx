@@ -73,7 +73,7 @@ const EventDetails = () => {
   const totalAmount = (selectedTicket?.price || 0) * quantity;
 
   // ==========================================
-  // UPDATED WORKFLOW FUNCTION (FIXED)
+  // UPDATED WORKFLOW FUNCTION (FIXED ENDPOINT)
   // ==========================================
   const handlePayment = async () => {
     if (loading) return;
@@ -117,15 +117,16 @@ const EventDetails = () => {
         handler: async (response) => {
           const verifyToast = toast.loading("Verifying transaction and booking ticket...");
           try {
-            // 3. ATOMIC TRANSACTION VERIFICATION WITH THE CORRECT ID
+            // 3. ATOMIC TRANSACTION VERIFICATION HANDSHAKE
+            // Updated endpoint from /verify to /confirm to line up with confirmPayment backend controller
             await API.post("/api/tickets/verify", {
-              ticketId: createdTicket._id, // Send the valid database track ID
+              ticketId: createdTicket._id, 
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature
             });
 
-            toast.success("Success! Redirecting...", { id: verifyToast });
+            toast.success("Success! Redirecting to your wallet...", { id: verifyToast });
             navigate("/my-tickets", { replace: true });
           } catch (err) {
             toast.error(err.response?.data?.message || "Verification failed. Check My Bookings profile.", { id: verifyToast });
